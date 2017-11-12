@@ -19,6 +19,7 @@
 #include <omnetpp.h>
 #include <string>
 #include <inet/applications/httptools/browser/HttpBrowser.h>
+//#include <inet/applications/tcpapp/TCPVideoClientApp.h>
 #include <inet/applications/udpapp/UDPVideoStreamCli.h>
 #include <inet/applications/udpapp/UDPVideoStreamSvr.h>
 #include <inet/applications/tcpapp/TCPSrvHostApp.h>
