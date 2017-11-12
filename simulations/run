@@ -1,0 +1,4 @@
+#!/bin/sh
+cd `dirname $0`
+../src/ubid -n .:../src $*
+# for shared lib, use: opp_run -l ../src/ubid -n .:../src $*

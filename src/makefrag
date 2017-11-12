@@ -1,0 +1,2 @@
+EXTRA_OBJS += -L/Library/gurobi751/mac64/lib -lgurobi_c++
+CFLAGS += -I/Library/gurobi751/mac64/inlcude

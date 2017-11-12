@@ -1,0 +1,3 @@
+package ubid;
+
+@license(LGPL);
