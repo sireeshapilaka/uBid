@@ -39,7 +39,8 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
         }
 
-        if (bidding) { // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
+        if (bidding) {
+            // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
             double bidAmount = intuniform(rng, 1, budget);;
             submitBid(rpis.front(), bidAmount);
         } else {

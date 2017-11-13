@@ -141,110 +141,44 @@ void Ue::initialize() {
 }
 
 void Ue::handleMessage(cMessage *msg) {
-    if (!browserApp) {
-        browserApp = check_and_cast<HttpBrowser*>(this->getSubmodule("tcpApp", 0));
-    }
-    if (!realtimeVideoApp) {
-        realtimeVideoApp = check_and_cast<UDPVideoStreamCli*>(this->getSubmodule("udpApp", 0));
-    }
-    if (!tcpVideoApp) {
-        tcpVideoApp = check_and_cast<TCPVideoClientApp*>(this->getSubmodule("tcpApp", 1));
-    }
-    if (!tcpAudioApp) {
-        tcpAudioApp = check_and_cast<TCPVideoClientApp*>(this->getSubmodule("tcpApp", 2));
-    }
-
     if (msg->isSelfMessage()) {
-        if (strcmp(msg->getName(),"EventsOver") == 0) {
-            if (isAnyApplicationActive()) {
-                EV_DEBUG << "Waiting for the last application to finish" << endl;
-                scheduleAt(simTime() + 120, msg);
-            } else {
-                delete msg;
-            }
-            return;
-        } else if (strcmp(msg->getName(), "EndCurrentActivity") == 0) { // We currently never come into this
-            //endCurrentActivityIfOngoing();
-            // Check back in sometime to see if activity is done
-            if (isAnyApplicationActive()) {
-                scheduleAt(simTime() + 30, msg);
-            } else {
-                scheduleNextActivity();
-                delete msg;
-            }
-        } else if (msg == startActivity){
-            // Time to start next activity
-            if (isAnyApplicationActive()) {
-                scheduleAt(simTime() + 30, msg);
-            } else {
-                cancelEvent(startActivity);
-                startNextActivity();
-            }
+        if (msg == startActivity){
+            cancelEvent(startActivity);
+            startNextActivity();
+        } else {
+            throw cRuntimeError("Message unknown");
         }
     } else {
-        // Message from UA
-        // Though honestly the UA should not be sending messages , it should just call the appropriate function
-        // to notify the UE
-        EV_DEBUG << "Received message sent by someone else " << endl;
-        processUAResponse(msg);
+        throw cRuntimeError("Message from unknown!");
     }
 }
 
-// Schedule Activity via Timer -> startActivity @ timer -> request UA for session -> realStart when UA gets back
 void Ue::scheduleNextActivity() {
-    // This is just an extraneous check, since this function scheduleNextActivity() is
-    // called only after an explicit call to endCurrentActivityIfOngoing()
-    //if (!isAnyApplicationActive()) {
-        if (activities.size() > 0) {
-            set<ActivityDAO>::iterator iter = activities.begin();
-            ActivityDAO activityToLaunch = (*iter);
-            int startTimeForActivity = activityToLaunch.getStartTimeInSeconds();
-            simtime_t currentTime = simTime();
-            if (startTimeForActivity < currentTime.dbl()) {
-                int schedTime = ceil(currentTime.dbl()) + expectedDurationActivity;
-                scheduleAt(SimTime(schedTime), startActivity);
-            } else {
-                int schedTime = max(startTimeForActivity, (int)ceil(currentTime.dbl()) + expectedDurationActivity);
-                scheduleAt(schedTime, startActivity);
-            }
-            expectedDurationActivity = 0;
+    if (activities.size() > 0) {
+        set<ActivityDAO>::iterator iter = activities.begin();
+        ActivityDAO activityToLaunch = (*iter);
+        int startTimeForActivity = activityToLaunch.getStartTimeInSeconds();
+        simtime_t currentTime = simTime();
+        if (startTimeForActivity < currentTime.dbl()) {
+            int schedTime = ceil(currentTime.dbl()) + expectedDurationActivity;
+            scheduleAt(SimTime(schedTime), startActivity);
         } else {
-            EV_DEBUG << "All events are done. Nothing more to schedule" << endl;
+            int schedTime = max(startTimeForActivity, (int)ceil(currentTime.dbl()) + expectedDurationActivity);
+            scheduleAt(SimTime(schedTime), startActivity);
         }
-//    } else {
-//        throw cRuntimeError("This should not happen!");
-//    }
+        expectedDurationActivity = 0;
+    } else {
+        EV_DEBUG << "All events are done. Nothing more to schedule" << endl;
+    }
 }
 
 // User has launched an application. Send the appropriate request to the UA -- No application should be active at this point
 void Ue::startNextActivity() {
-    if (!isAnyApplicationActive()) {
-        set<ActivityDAO>::iterator iter = activities.begin();
-        ActivityDAO activityToLaunch = (*iter);
-        // TODO: provide desired duration for uplink and downlink
-        ua->getReservedAccess(activityToLaunch.getActivityType(), activityToLaunch.getDownlink(), activityToLaunch.getUplink(), 0, 0);
-        string type = activityToLaunch.getActivityType();
-        double expectedDuration = 0;
-
-        unsigned int downlinkSize = ((8*activityToLaunch.getDownlink()) < activityToLaunch.getDownlink() ? UINT_MAX: 8*activityToLaunch.getDownlink());
-        unsigned int uplinkSize = ((8*activityToLaunch.getUplink()) < activityToLaunch.getUplink() ? UINT_MAX: 8*activityToLaunch.getUplink());
-
-        if (type == "Audio") {
-            expectedDuration = downlinkSize/96000.0;
-        } else if (type == "Video") {
-            expectedDuration = uplinkSize/3000000.0;
-        } else if (type == "RealtimeVideo") {
-            expectedDuration = max(uplinkSize/500000.0, downlinkSize/500000.0);
-        } else {
-            expectedDuration = (uplinkSize/75000.0) + (downlinkSize/1000000.0);
-        }
-        expectedDurationActivity = ceil(expectedDuration);
-        // TODO fake negotiation
-        activities.erase(activities.begin());
-        scheduleNextActivity();
-    } else {
-        throw cRuntimeError("No application should be active at this point");
-    }
+    set<ActivityDAO>::iterator iter = activities.begin();
+    ActivityDAO activityToLaunch = (*iter);
+    // TODO: provide desired duration for uplink and downlink
+    ua->getReservedAccess(activityToLaunch.getActivityType(), activityToLaunch.getDownlink(), activityToLaunch.getUplink(), 0, 0);
+    activities.erase(activities.begin());
 }
 
 void Ue::processUAResponse(cMessage* message) {
@@ -263,31 +197,30 @@ void Ue::processUAResponse(cMessage* message) {
 
         set<ActivityDAO>::iterator iter = activities.begin();
         ActivityDAO activityToLaunch = (*iter);
-        unsigned int downlink = activityToLaunch.getDownlink();
-        unsigned int uplink = activityToLaunch.getUplink();
+        unsigned int downlink = ((8*activityToLaunch.getDownlink()) < activityToLaunch.getDownlink() ? UINT_MAX: 8*activityToLaunch.getDownlink());
+        unsigned int uplink = ((8*activityToLaunch.getUplink()) < activityToLaunch.getUplink() ? UINT_MAX: 8*activityToLaunch.getUplink());
         activities.erase(iter);
         if (activityType == "Browser" || activityType == "TCP") {
             EV_DEBUG << "Starting Browser Activity for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            browserApp->startNextActivity(downlink, uplink);
             numBrowserSessions++;
             lastActiveAppType = "Browser";
         }
         else if (activityType == "Audio") {
             EV_DEBUG << "Starting Audio Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            tcpAudioApp->requestStream(downlink, uplink);
             numTCPAudioSessions++;
             lastActiveAppType = "Audio";
+            expectedDurationActivity = ceil(downlinkSize/downlinkThroughput);
         } else if (activityType == "Video") {
             EV_DEBUG << "Starting Video Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            tcpVideoApp->requestStream(downlink, uplink);
             numTCPVideoSessions++;
             lastActiveAppType = "Video";
+            expectedDurationActivity = ceil(downlinkSize/downlinkThroughput);
         } else if (activityType == "RealtimeVideo") {
             // UDP Video streaming
             EV_DEBUG << "Starting Realtime Streaming for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            realtimeVideoApp->requestStream(downlink, uplink);
             numUDPSessions++;
             lastActiveAppType = "RealtimeVideo";
+            expectedDurationActivity = ceil( max(uplinkSize/uplinkThroughput, downlinkSize/downlinkThroughput));
         }
 
         if (activityType == "RealtimeVideo") {
@@ -295,9 +228,6 @@ void Ue::processUAResponse(cMessage* message) {
         } else {
             tcpOn = true;
         }
-        // schedule activity to end this one if its not ended at the specific duration
-        // scheduleAt((simtime_t)simTime() + duration + 1, new cMessage("EndCurrentActivity"));
-        // Schedule next activity
         scheduleNextActivity();
     } else {
         EV_DEBUG << "Abort activity" << endl;
@@ -311,75 +241,6 @@ void Ue::processUAResponse(cMessage* message) {
 void Ue::handleFailure(AppAccessResponse* appAccessResponse) {
     // Move on
     scheduleNextActivity();
-}
-
-bool Ue::isAnyApplicationActive() {
-    if (!addressSet) {
-        IPv4RoutingTable* routingTable = check_and_cast<IPv4RoutingTable*>(this->getSubmodule("routingTable"));
-        myAddress = routingTable->getRouterIdAsGeneric().str();
-        addressSet = true;
-    }
-    if (!serverApp) {
-        serverApp = check_and_cast<HttpServer*>(this->getParentModule()->getSubmodule(browserApp->getServerName().c_str())->getSubmodule("tcpApp", 0));
-    }
-    if (!udpSrv) {
-        string serverName = realtimeVideoApp->getServerName();
-        udpSrv = check_and_cast<UDPVideoStreamSvr*>(this->getParentModule()->getSubmodule(serverName.c_str())->getSubmodule("udpApp", 0));
-    }
-//    if (!tcpAudioApp) {
-//        tcpAudioApp = check_and_cast<TCPSrvHostApp*>(this->getParentModule()->getSubmodule(tcpAudioApp->getServerName().c_str()));
-//    }
-//    if (!tcpVideoApp) {
-//        tcpVideoApp = check_and_cast<TCPSrvHostApp*>(this->getParentModule()->getSubmodule(tcpVideoApp->getServerName().c_str()));
-//    }
-    if (!udpOn && !tcpOn) {
-        return false;
-    } else if (tcpOn) {
-        if (lastActiveAppType == "Browser" || lastActiveAppType == "TCP") {
-            if (!browserApp->isAConnectionActive()) {
-                double browserReceptionTime = serverApp->getUeMessageReceiveTimeAndReset(myAddress);
-                double browserDispatchTime = serverApp->getUeMessageSentTimeAndReset(myAddress);
-                browserApp->recordStat(browserReceptionTime, browserDispatchTime);
-                tcpOn = false;
-            }
-        } else {
-            tcpOn = tcpVideoApp->isAConnectionActive() || tcpAudioApp->isAConnectionActive();
-        }
-        if (!tcpOn) {
-            EV_DEBUG << "Last TCP session ended " << endl;
-        }
-        return tcpOn;
-    } else { // TCP off and UDP on
-        udpOn = realtimeVideoApp->isActive();
-        if (!udpOn) {
-            // Make sure to abort the abort at the sever
-            realtimeVideoApp->registerUplinkInterarrivalTimeForSession(udpSrv->getUeInterarrivalTime(myAddress));
-            realtimeVideoApp->registerUplinkThroughputForSession(udpSrv->getUeThroughputAndReset(myAddress));
-            udpSrv->deleteStreamForUe(myAddress);
-            EV_DEBUG << "Last UDP session ended " << endl;
-        }
-        return udpOn;
-    }
-}
-
-void Ue::endCurrentActivityIfOngoing() {
-    if(isAnyApplicationActive()) {
-        // We need to forcibly terminate this connection
-        if (tcpOn) {
-            if (lastActiveAppType == "Browser" || lastActiveAppType == "TCP") {
-                // Nothing much we can do here if the transmission is ongoing ..
-                // If only uplink has been sent and downlink is yet to start, then we may be
-                // able to cancel downlink
-            } else if (lastActiveAppType == "Video") {
-                // Terminate or prevent downlink transmission
-            } else { // Audio
-                // Terminate or prevent downlink transmission
-            }
-
-        } else {
-            // UDP Video stream: Terminate upstream and downlink transmission
-        }
-    }
 }
 
 void Ue::setTcpDone() {

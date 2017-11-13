@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for uBid
+# OMNeT++/OMNEST Makefile for uBid1
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -I/Users/sireeshapilaka/inet/src -L/Users/sireeshapilaka/inet/out/$$\(CONFIGNAME\)/src -lINET -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic -KINET_PROJ=/Users/sireeshapilaka/inet
+#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
 #
 
 # Name of target to be created (-o option)
-TARGET = uBid$(EXE_SUFFIX)
+TARGET = uBid1$(EXE_SUFFIX)
 
 # User interface (uncomment one) (-u option)
 USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LIBS)
@@ -17,19 +17,18 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 # C++ include paths (with -I)
 INCLUDE_PATH = \
     -I/Library/gurobi751/mac64/include \
-    -I$(INET_PROJ)/src \
     -I. \
     -Icorenetwork \
     -Icorenetwork/Negotiation \
     -Icorenetwork/nodes \
-    -Idao
+    -Idao \
+    -Iutil
 
 # Additional object and library files to link with
 EXTRA_OBJS =
 
 # Additional libraries (-L, -l options)
-LIBS = -L$(INET_PROJ)/out/$(CONFIGNAME)/src  -lINET
-LIBS += -Wl,-rpath,`abspath $(INET_PROJ)/out/$(CONFIGNAME)/src`
+LIBS =
 
 # Output directory
 PROJECT_OUTPUT_DIR = ../out
@@ -37,7 +36,17 @@ PROJECTRELATIVE_PATH = src
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/corenetwork/Negotiation/NetworkAgent.o $O/corenetwork/Negotiation/ResourceManager.o $O/corenetwork/nodes/Ue.o $O/corenetwork/nodes/UserAgent.o $O/dao/BidResponse.o
+OBJS = \
+    $O/corenetwork/Negotiation/NetworkAgent.o \
+    $O/corenetwork/Negotiation/ResourceManager.o \
+    $O/corenetwork/nodes/Ue.o \
+    $O/corenetwork/nodes/UserAgent.o \
+    $O/dao/ActivityDAO.o \
+    $O/dao/AppAccessResponse.o \
+    $O/dao/AppBwReq.o \
+    $O/dao/AppBwRes.o \
+    $O/dao/BidResponse.o \
+    $O/util/AppTrafficParser.o
 
 # Message files
 MSGFILES =
@@ -48,7 +57,6 @@ SMFILES =
 # Other makefile variables (-K)
 GUROBI_HOME=/Library/gurobi751/mac64
 GRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
-INET_PROJ=/Users/sireeshapilaka/inet
 
 #------------------------------------------------------------------------------
 
@@ -131,175 +139,63 @@ smheaders: $(SMFILES:.sm=_sm.h)
 clean:
 	$(qecho) Cleaning...
 	$(Q)-rm -rf $O
-	$(Q)-rm -f uBid uBid.exe libuBid.so libuBid.a libuBid.dll libuBid.dylib
+	$(Q)-rm -f uBid1 uBid1.exe libuBid1.so libuBid1.a libuBid1.dll libuBid1.dylib
 	$(Q)-rm -f ./*_m.cc ./*_m.h ./*_sm.cc ./*_sm.h
 	$(Q)-rm -f corenetwork/*_m.cc corenetwork/*_m.h corenetwork/*_sm.cc corenetwork/*_sm.h
 	$(Q)-rm -f corenetwork/Negotiation/*_m.cc corenetwork/Negotiation/*_m.h corenetwork/Negotiation/*_sm.cc corenetwork/Negotiation/*_sm.h
 	$(Q)-rm -f corenetwork/nodes/*_m.cc corenetwork/nodes/*_m.h corenetwork/nodes/*_sm.cc corenetwork/nodes/*_sm.h
 	$(Q)-rm -f dao/*_m.cc dao/*_m.h dao/*_sm.cc dao/*_sm.h
+	$(Q)-rm -f util/*_m.cc util/*_m.h util/*_sm.cc util/*_sm.h
 
 cleanall: clean
 	$(Q)-rm -rf $(PROJECT_OUTPUT_DIR)
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc corenetwork/*.cc corenetwork/Negotiation/*.cc corenetwork/nodes/*.cc dao/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc corenetwork/*.cc corenetwork/Negotiation/*.cc corenetwork/nodes/*.cc dao/*.cc util/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.cc \
-	$(INET_PROJ)/src/inet/applications/base/ApplicationBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowser.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowserBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpEventMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpNodeBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpRandom.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/applications/httptools/configurator/HttpController.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServer.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServerBase.h \
-	$(INET_PROJ)/src/inet/applications/tcpapp/TCPSrvHostApp.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamCli.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamSvr.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/INETMath.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/common/NotifierConsts.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/ILifecycle.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/LifecycleOperation.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/NodeOperations.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/OperationalBase.h \
-	$(INET_PROJ)/src/inet/features.h \
-	$(INET_PROJ)/src/inet/linklayer/common/MACAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceEntry.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceToken.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3Address.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3AddressResolver.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModuleIdAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModulePathAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IInterfaceTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoute.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv4/IPv4Address.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv6/IPv6Address.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IIPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4Route.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPCommand_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocket.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocketMap.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPSocket.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
+	dao/ActivityDAO.h \
+	dao/AppAccessResponse.h \
 	dao/BidResponse.h
 $O/corenetwork/Negotiation/ResourceManager.o: corenetwork/Negotiation/ResourceManager.cc \
 	corenetwork/Negotiation/ResourceManager.h
 $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
-	$(INET_PROJ)/src/inet/applications/base/ApplicationBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowser.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowserBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpEventMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpNodeBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpRandom.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/applications/httptools/configurator/HttpController.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServer.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServerBase.h \
-	$(INET_PROJ)/src/inet/applications/tcpapp/TCPSrvHostApp.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamCli.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamSvr.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/INETMath.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/common/NotifierConsts.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/ILifecycle.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/LifecycleOperation.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/NodeOperations.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/OperationalBase.h \
-	$(INET_PROJ)/src/inet/features.h \
-	$(INET_PROJ)/src/inet/linklayer/common/MACAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceEntry.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceToken.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3Address.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3AddressResolver.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModuleIdAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModulePathAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IInterfaceTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoute.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv4/IPv4Address.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv6/IPv6Address.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IIPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4Route.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPCommand_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocket.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocketMap.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPSocket.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
 	corenetwork/nodes/UserAgent.h \
-	dao/BidResponse.h
+	dao/ActivityDAO.h \
+	dao/AppAccessResponse.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h \
+	dao/BidResponse.h \
+	util/AppTrafficParser.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
-	$(INET_PROJ)/src/inet/applications/base/ApplicationBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowser.h \
-	$(INET_PROJ)/src/inet/applications/httptools/browser/HttpBrowserBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpEventMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpNodeBase.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpRandom.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/applications/httptools/configurator/HttpController.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServer.h \
-	$(INET_PROJ)/src/inet/applications/httptools/server/HttpServerBase.h \
-	$(INET_PROJ)/src/inet/applications/tcpapp/TCPSrvHostApp.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamCli.h \
-	$(INET_PROJ)/src/inet/applications/udpapp/UDPVideoStreamSvr.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/INETMath.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/common/NotifierConsts.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/ILifecycle.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/LifecycleOperation.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/NodeOperations.h \
-	$(INET_PROJ)/src/inet/common/lifecycle/OperationalBase.h \
-	$(INET_PROJ)/src/inet/features.h \
-	$(INET_PROJ)/src/inet/linklayer/common/MACAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceEntry.h \
-	$(INET_PROJ)/src/inet/networklayer/common/InterfaceToken.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3Address.h \
-	$(INET_PROJ)/src/inet/networklayer/common/L3AddressResolver.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModuleIdAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/common/ModulePathAddress.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IInterfaceTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoute.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/IRoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv4/IPv4Address.h \
-	$(INET_PROJ)/src/inet/networklayer/contract/ipv6/IPv6Address.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IIPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4Route.h \
-	$(INET_PROJ)/src/inet/networklayer/ipv4/IPv4RoutingTable.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPCommand_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocket.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/tcp/TCPSocketMap.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPControlInfo_m.h \
-	$(INET_PROJ)/src/inet/transportlayer/contract/udp/UDPSocket.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
 	corenetwork/nodes/UserAgent.h \
+	dao/ActivityDAO.h \
+	dao/AppAccessResponse.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h \
 	dao/BidResponse.h
+$O/dao/ActivityDAO.o: dao/ActivityDAO.cc \
+	dao/ActivityDAO.h
+$O/dao/AppAccessResponse.o: dao/AppAccessResponse.cc \
+	dao/AppAccessResponse.h
+$O/dao/AppBwReq.o: dao/AppBwReq.cc \
+	dao/AppBwReq.h
+$O/dao/AppBwRes.o: dao/AppBwRes.cc \
+	dao/AppBwRes.h
 $O/dao/BidResponse.o: dao/BidResponse.cc \
 	dao/BidResponse.h
+$O/util/AppTrafficParser.o: util/AppTrafficParser.cc \
+	dao/ActivityDAO.h \
+	util/AppTrafficParser.h
 

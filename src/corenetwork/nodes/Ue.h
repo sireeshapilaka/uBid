@@ -18,14 +18,7 @@
 
 #include <omnetpp.h>
 #include <string>
-#include <inet/applications/httptools/browser/HttpBrowser.h>
-//#include <inet/applications/tcpapp/TCPVideoClientApp.h>
-#include <inet/applications/udpapp/UDPVideoStreamCli.h>
-#include <inet/applications/udpapp/UDPVideoStreamSvr.h>
-#include <inet/applications/tcpapp/TCPSrvHostApp.h>
 #include <dao/ActivityDAO.h>
-#include <inet/networklayer/ipv4/IPv4RoutingTable.h>
-#include <inet/applications/httptools/server/HttpServer.h>
 #include <dao/AppAccessResponse.h>
 #include <dao/BidResponse.h>
 
@@ -85,14 +78,6 @@ private:
   cMessage* startActivity = new cMessage("StartActivity");
   bool tcpOn = false;
   bool udpOn = false;
-  HttpBrowser* browserApp = NULL;
-  HttpServer* serverApp = NULL;
-  UDPVideoStreamCli* realtimeVideoApp = NULL;
-  TCPVideoClientApp* tcpVideoApp = NULL;
-  TCPVideoClientApp* tcpAudioApp = NULL;
-  UDPVideoStreamSvr* udpSrv = NULL;
-  TCPSrvHostApp* videoSrv = NULL;
-  TCPSrvHostApp* audioSrv = NULL;
   string myAddress;
   bool addressSet = false;
   int numSessions = 0;
