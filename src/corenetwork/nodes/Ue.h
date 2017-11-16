@@ -18,9 +18,14 @@
 
 #include <omnetpp.h>
 #include <string>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 #include <dao/ActivityDAO.h>
 #include <dao/AppAccessResponse.h>
 #include <dao/BidResponse.h>
+#include <INETDefs.h>
+#include <HttpUtils.h>
 
 using namespace omnetpp;
 using namespace std;

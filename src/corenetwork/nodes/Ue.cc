@@ -209,18 +209,18 @@ void Ue::processUAResponse(cMessage* message) {
             EV_DEBUG << "Starting Audio Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
             numTCPAudioSessions++;
             lastActiveAppType = "Audio";
-            expectedDurationActivity = ceil(downlinkSize/downlinkThroughput);
+            expectedDurationActivity = ceil(downlink/downlinkThroughput);
         } else if (activityType == "Video") {
             EV_DEBUG << "Starting Video Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
             numTCPVideoSessions++;
             lastActiveAppType = "Video";
-            expectedDurationActivity = ceil(downlinkSize/downlinkThroughput);
+            expectedDurationActivity = ceil(downlink/downlinkThroughput);
         } else if (activityType == "RealtimeVideo") {
             // UDP Video streaming
             EV_DEBUG << "Starting Realtime Streaming for Uplink: " << uplink << " And Downlink " << downlink << endl;
             numUDPSessions++;
             lastActiveAppType = "RealtimeVideo";
-            expectedDurationActivity = ceil( max(uplinkSize/uplinkThroughput, downlinkSize/downlinkThroughput));
+            expectedDurationActivity = ceil( max(uplink/uplinkThroughput, downlink/downlinkThroughput));
         }
 
         if (activityType == "RealtimeVideo") {

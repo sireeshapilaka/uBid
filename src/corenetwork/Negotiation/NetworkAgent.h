@@ -24,6 +24,8 @@
 #include <dao/BidResponse.h>
 #include <corenetwork/nodes/Ue.h>
 #include <chrono>
+#include <AppBwReq.h>
+#include <AppBwRes.h>
 
 using namespace omnetpp;
 using namespace std;

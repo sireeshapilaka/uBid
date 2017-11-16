@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for uBid1
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
+#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -I../../inet/src/inet/applications/httptools/common -I../../inet/src -I../../inet/src/inet/common -L../../inet/out/$$\(CONFIGNAME\)/src -lINET -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic -KINET_PROJ=../../inet
 #
 
 # Name of target to be created (-o option)
@@ -17,6 +17,9 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 # C++ include paths (with -I)
 INCLUDE_PATH = \
     -I/Library/gurobi751/mac64/include \
+    -I../../inet/src/inet/applications/httptools/common \
+    -I../../inet/src \
+    -I../../inet/src/inet/common \
     -I. \
     -Icorenetwork \
     -Icorenetwork/Negotiation \
@@ -28,7 +31,8 @@ INCLUDE_PATH = \
 EXTRA_OBJS =
 
 # Additional libraries (-L, -l options)
-LIBS =
+LIBS = -L../../inet/out/$(CONFIGNAME)/src  -lINET
+LIBS += -Wl,-rpath,`abspath ../../inet/out/$(CONFIGNAME)/src`
 
 # Output directory
 PROJECT_OUTPUT_DIR = ../out
@@ -57,6 +61,7 @@ SMFILES =
 # Other makefile variables (-K)
 GUROBI_HOME=/Library/gurobi751/mac64
 GRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
+INET_PROJ=../../inet
 
 #------------------------------------------------------------------------------
 
@@ -100,7 +105,8 @@ endif
 # User-supplied makefile fragment(s)
 # >>>
 # inserted from file 'makefrag':
-EXTRA_OBJS += -L/Library/gurobi751/mac64/lib -lgurobi_c++
+CMAKE_CXX_FLAGS += -stdlib=libstdc++
+EXTRA_OBJS += -L/Library/gurobi751/mac64/lib -lgurobi_c++ -lgurobi75
 CFLAGS += -I/Library/gurobi751/mac64/inlcude
 
 # <<<
@@ -156,15 +162,29 @@ depend:
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.cc \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
+	$(INET_PROJ)/src/inet/common/Compat.h \
+	$(INET_PROJ)/src/inet/common/INETDefs.h \
+	$(INET_PROJ)/src/inet/common/InitStages.h \
+	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
 	dao/ActivityDAO.h \
 	dao/AppAccessResponse.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h \
 	dao/BidResponse.h
 $O/corenetwork/Negotiation/ResourceManager.o: corenetwork/Negotiation/ResourceManager.cc \
 	corenetwork/Negotiation/ResourceManager.h
 $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
+	$(INET_PROJ)/src/inet/common/Compat.h \
+	$(INET_PROJ)/src/inet/common/INETDefs.h \
+	$(INET_PROJ)/src/inet/common/InitStages.h \
+	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
@@ -176,6 +196,12 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	dao/BidResponse.h \
 	util/AppTrafficParser.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
+	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
+	$(INET_PROJ)/src/inet/common/Compat.h \
+	$(INET_PROJ)/src/inet/common/INETDefs.h \
+	$(INET_PROJ)/src/inet/common/InitStages.h \
+	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
