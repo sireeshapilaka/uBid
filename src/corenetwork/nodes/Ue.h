@@ -24,13 +24,11 @@
 #include <dao/ActivityDAO.h>
 #include <dao/AppAccessResponse.h>
 #include <dao/BidResponse.h>
-#include <INETDefs.h>
-#include <HttpUtils.h>
+#include <util/StrUtils.h>
 
 using namespace omnetpp;
 using namespace std;
-using namespace inet;
-using namespace httptools;
+using namespace strutils;
 
 class UserAgent;
 

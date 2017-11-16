@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for uBid1
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -I../../inet/src/inet/applications/httptools/common -I../../inet/src -I../../inet/src/inet/common -L../../inet/out/$$\(CONFIGNAME\)/src -lINET -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic -KINET_PROJ=../../inet
+#  opp_makemake -f --deep -I/Library/gurobi751/mac64/include -KGUROBI_HOME=/Library/gurobi751/mac64 -KGRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
 #
 
 # Name of target to be created (-o option)
@@ -17,9 +17,6 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 # C++ include paths (with -I)
 INCLUDE_PATH = \
     -I/Library/gurobi751/mac64/include \
-    -I../../inet/src/inet/applications/httptools/common \
-    -I../../inet/src \
-    -I../../inet/src/inet/common \
     -I. \
     -Icorenetwork \
     -Icorenetwork/Negotiation \
@@ -31,8 +28,7 @@ INCLUDE_PATH = \
 EXTRA_OBJS =
 
 # Additional libraries (-L, -l options)
-LIBS = -L../../inet/out/$(CONFIGNAME)/src  -lINET
-LIBS += -Wl,-rpath,`abspath ../../inet/out/$(CONFIGNAME)/src`
+LIBS =
 
 # Output directory
 PROJECT_OUTPUT_DIR = ../out
@@ -50,7 +46,8 @@ OBJS = \
     $O/dao/AppBwReq.o \
     $O/dao/AppBwRes.o \
     $O/dao/BidResponse.o \
-    $O/util/AppTrafficParser.o
+    $O/util/AppTrafficParser.o \
+    $O/util/StrUtils.o
 
 # Message files
 MSGFILES =
@@ -61,7 +58,6 @@ SMFILES =
 # Other makefile variables (-K)
 GUROBI_HOME=/Library/gurobi751/mac64
 GRB_LICENSE_FILE=/Users/sireeshapilaka/gurobi.lic
-INET_PROJ=../../inet
 
 #------------------------------------------------------------------------------
 
@@ -162,12 +158,6 @@ depend:
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.cc \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
@@ -175,16 +165,11 @@ $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.
 	dao/AppAccessResponse.h \
 	dao/AppBwReq.h \
 	dao/AppBwRes.h \
-	dao/BidResponse.h
+	dao/BidResponse.h \
+	util/StrUtils.h
 $O/corenetwork/Negotiation/ResourceManager.o: corenetwork/Negotiation/ResourceManager.cc \
 	corenetwork/Negotiation/ResourceManager.h
 $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
@@ -194,14 +179,9 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	dao/AppBwReq.h \
 	dao/AppBwRes.h \
 	dao/BidResponse.h \
-	util/AppTrafficParser.h
+	util/AppTrafficParser.h \
+	util/StrUtils.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpMessages_m.h \
-	$(INET_PROJ)/src/inet/applications/httptools/common/HttpUtils.h \
-	$(INET_PROJ)/src/inet/common/Compat.h \
-	$(INET_PROJ)/src/inet/common/INETDefs.h \
-	$(INET_PROJ)/src/inet/common/InitStages.h \
-	$(INET_PROJ)/src/inet/features.h \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
@@ -210,7 +190,8 @@ $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	dao/AppAccessResponse.h \
 	dao/AppBwReq.h \
 	dao/AppBwRes.h \
-	dao/BidResponse.h
+	dao/BidResponse.h \
+	util/StrUtils.h
 $O/dao/ActivityDAO.o: dao/ActivityDAO.cc \
 	dao/ActivityDAO.h
 $O/dao/AppAccessResponse.o: dao/AppAccessResponse.cc \
@@ -224,4 +205,6 @@ $O/dao/BidResponse.o: dao/BidResponse.cc \
 $O/util/AppTrafficParser.o: util/AppTrafficParser.cc \
 	dao/ActivityDAO.h \
 	util/AppTrafficParser.h
+$O/util/StrUtils.o: util/StrUtils.cc \
+	util/StrUtils.h
 
