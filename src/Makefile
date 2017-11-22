@@ -41,13 +41,13 @@ OBJS = \
     $O/corenetwork/Negotiation/ResourceManager.o \
     $O/corenetwork/nodes/Ue.o \
     $O/corenetwork/nodes/UserAgent.o \
+    $O/dao/ActivityDAO.o \
+    $O/dao/AppAccessResponse.o \
+    $O/dao/AppBwReq.o \
     $O/dao/AppBwRes.o \
     $O/dao/BidResponse.o \
-    $O/dao/ActivityDAO.o \
-    $O/dao/AppBwReq.o \
-    $O/dao/AppAccessResponse.o \
-    $O/util/StrUtils.o \
-    $O/util/AppTrafficParser.o
+    $O/util/AppTrafficParser.o \
+    $O/util/StrUtils.o
 
 # Message files
 MSGFILES =
