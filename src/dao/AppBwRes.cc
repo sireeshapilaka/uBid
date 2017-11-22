@@ -79,3 +79,7 @@ void AppBWRes::setUser(int userName) {
 int AppBWRes::getUser() {
     return this->ueId;
 }
+
+void AppBWRes::printForDebug() {
+    cout << "(" << this->ulBandwidth << ", " << this->ulDuration << ", " << this->dlBandwidth << ", " << this->dlDuration << ")";
+}

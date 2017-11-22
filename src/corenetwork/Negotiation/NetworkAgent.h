@@ -42,6 +42,7 @@ public:
     void submitBid(int ueId, AppBWRes* rpi, double budget);
     void handleMessage(cMessage* message);
     void finish();
+    double solveAuction(list<AppBWRes*> bids);
 private:
     ResourceManager resourceManager;
 

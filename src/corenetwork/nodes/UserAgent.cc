@@ -69,6 +69,8 @@ void UserAgent::submitBid(AppBWRes* rpi, double budget) {
 
 void UserAgent::handleBidResponse(BidResponse* bidResult) {
     if (bidResult->isBidResult()) {// Won the bid
+        cout << "Bid amount " << bidResult->getPayment();
+        cout << endl;
         moneySpentAggregate += bidResult->getPayment();
         // Inform the UE
         AppAccessResponse* response = new AppAccessResponse();

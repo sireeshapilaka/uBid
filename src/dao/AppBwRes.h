@@ -55,6 +55,8 @@ public:
 
     void setUser(int userName);
     int getUser();
+
+    void printForDebug();
 };
 
 #endif /* APPBWRES_H_ */

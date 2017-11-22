@@ -28,12 +28,146 @@ void NetworkAgent::initialize() {
     env = new GRBEnv();
     // Schedule self-timer for clearing auction
     timeOfNextAuction = simTime() + 3;
-  //TODO: not negotiating  scheduleAt(timeOfNextAuction, new cMessage("Auction"));
+  //TODO: not negotiating
+    scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 
 void NetworkAgent::finish() {
     resourceManager.recordStats();
 }
+
+double NetworkAgent::solveAuction(list<AppBWRes*> rpis){
+    //TODO: clean up code redundancy
+    int numOfBids = rpis.size();
+    if(numOfBids==0) return 0;
+
+    GRBModel model = GRBModel(*env);
+    GRBVar* decisionVars = model.addVars(numOfBids, GRB_BINARY);
+    list<AppBWRes*>::iterator iter;
+    int longestDuration = 0;
+    int i = 0;
+    for (iter = rpis.begin(); iter != rpis.end(); iter++) {
+        string s = "x_" + to_string(i);
+        decisionVars[i].set(GRB_DoubleAttr_Obj, (*iter)->getBidAmount());
+        decisionVars[i].set(GRB_StringAttr_VarName, s);
+        i++;
+        if ((*iter)->getActivityType() == "TCP" || (*iter)->getActivityType() == "Browser") {
+            longestDuration = max(longestDuration, (*iter)->getUlDuration()+ (*iter)->getDlDuration());
+        } else {
+            longestDuration = max(longestDuration, max((*iter)->getUlDuration(), (*iter)->getDlDuration()));
+        }
+    }
+
+    model.update();
+    // Objective is to maximize revenue
+    model.set(GRB_IntAttr_ModelSense, GRB_MAXIMIZE);
+
+    // Constraints
+    simtime_t currentTime = simTime();
+    for (int d  = 1; d <= longestDuration; d++) {
+        SimTime correspondingSimtime = SimTime(currentTime.dbl() + d);
+        GRBLinExpr ulCapConstraint = 0;
+        GRBLinExpr dlCapConstraint = 0;
+        list<AppBWRes*>::iterator iter;
+        int i = 0;
+        double* ulCapacities = new double[numOfBids];
+        double* dlCapacities = new double[numOfBids];
+        for (iter = rpis.begin(); iter != rpis.end(); iter++) {
+            string activityType = (*iter)->getActivityType();
+            if (activityType == "Video" || activityType == "Audio") {
+                // Only downlink traffic reservation
+                if ((*iter)->getDlDuration() >= d) {
+                    dlCapacities[i] = (*iter)->getDlBandwidth();
+                } else {
+                    dlCapacities[i] = 0;
+                }
+                ulCapacities[i] = 0;
+            } else if (activityType == "RealtimeVideo") {
+                if ((*iter)->getUlDuration() >= d) {
+                    ulCapacities[i] = (*iter)->getUlBandwidth();
+                } else {
+                    ulCapacities[i] = 0;
+                }
+                if ((*iter)->getDlDuration() >= d) {
+                    dlCapacities[i] = (*iter)->getDlBandwidth();
+                } else {
+                    dlCapacities[i] = 0;
+                }
+            } else { // Bursty traffic -> First schedule Uplink, then schedule Downlink
+                if ((*iter)->getUlDuration() >= d) {
+                    ulCapacities[i] = (*iter)->getUlBandwidth();
+                    dlCapacities[i] = 0;
+                } else {
+                    ulCapacities[i] = 0;
+                    if ((*iter)->getDlDuration() + (*iter)->getUlDuration() >= d) {
+                        dlCapacities[i] = (*iter)->getDlBandwidth();
+                    } else {
+                        dlCapacities[i] = 0;
+                    }
+                }
+            }
+            i++;
+        }
+        ulCapConstraint.addTerms(ulCapacities, decisionVars, numOfBids);
+        dlCapConstraint.addTerms(dlCapacities, decisionVars, numOfBids);
+
+        double availableUplinkCapacity = 25000;
+        if (resourceManager.ulCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.ulCellRsrcAllocMapList->at(0)->end()) {
+            availableUplinkCapacity -= resourceManager.ulCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
+        }
+
+        double availableDownlinkCapacity = 25000;
+        if (resourceManager.dlCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.dlCellRsrcAllocMapList->at(0)->end()) {
+            availableUplinkCapacity -= resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
+        }
+
+        model.addConstr(dlCapConstraint, GRB_LESS_EQUAL, availableDownlinkCapacity, "Capacity");
+        model.addConstr(ulCapConstraint, GRB_LESS_EQUAL, availableUplinkCapacity, "Capacity");
+    }
+
+    model.optimize();
+    model.write("debug.lp");
+
+    int optimstatus = model.get(GRB_IntAttr_Status);
+    double objval = 0;
+    if (optimstatus == GRB_OPTIMAL) {
+        objval = model.get(GRB_DoubleAttr_ObjVal);
+        cout << "Optimal objective: " << objval << endl;
+    } else if (optimstatus == GRB_INF_OR_UNBD) {
+        throw cRuntimeError("Model is infeasible or unbounded");
+    } else if (optimstatus == GRB_INFEASIBLE) {
+        throw cRuntimeError("Model is infeasible");
+    } else if (optimstatus == GRB_UNBOUNDED) {
+        throw cRuntimeError("Model is unbounded");
+    } else {
+        cout << "Price Optimization was stopped with status = "
+                << optimstatus << endl;
+    }
+
+    // Determine 2nd price
+    iter = rpis.begin();
+    i = 0;
+    double bytes = 0;
+    double bidSum = 0;
+    while (iter != rpis.end()) {
+        AppBWRes* bidOfInterest = *iter;
+        bool decision = (decisionVars[i].get(GRB_DoubleAttr_X) == 1 ? true : false);
+        if (decision) {
+            // Winning bids
+            bytes += (bidOfInterest->getUlBandwidth() * bidOfInterest->getUlDuration())
+                    + (bidOfInterest->getDlBandwidth() * bidOfInterest->getDlDuration());
+            bidSum += (bidOfInterest->getBidAmount());
+        }
+        rpis.erase(iter);
+        i++;
+        iter++;
+    }
+
+    delete [] decisionVars;
+    delete [] model.getConstrs();
+    return bidSum/bytes;
+}
+
 
 void NetworkAgent::handleMessage(cMessage* msg) {
     resourceManager.clearElapsedEntries();
@@ -115,12 +249,12 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         ulCapConstraint.addTerms(ulCapacities, decisionVars, numOfBids);
         dlCapConstraint.addTerms(dlCapacities, decisionVars, numOfBids);
 
-        double availableUplinkCapacity = 25000;
+        double availableUplinkCapacity = 2500;
         if (resourceManager.ulCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.ulCellRsrcAllocMapList->at(0)->end()) {
             availableUplinkCapacity -= resourceManager.ulCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
         }
 
-        double availableDownlinkCapacity = 25000;
+        double availableDownlinkCapacity = 2500;
         if (resourceManager.dlCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.dlCellRsrcAllocMapList->at(0)->end()) {
             availableUplinkCapacity -= resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
         }
@@ -153,15 +287,33 @@ void NetworkAgent::handleMessage(cMessage* msg) {
            << optimstatus << endl;
     }
 
+    // Determine price to charge
+    iter = bidsForNextAuction.begin();
+    i = 0;
+    list<AppBWRes*> rpisForPrice;
 
+    while(iter != bidsForNextAuction.end()) {
+        AppBWRes* bidOfInterest = *iter;
+        bool faildecision = (decisionVars[i].get(GRB_DoubleAttr_X) == 1 ? false : true);
+        if(faildecision) {
+            rpisForPrice.push_back(bidOfInterest);
+        }
+        i++;
+        iter++;
+    }
+    double rate = solveAuction(rpisForPrice);
+    cout << "Rate " << rate << endl;
+
+    // Convey decisions
     iter = bidsForNextAuction.begin();
     i = 0;
     while (iter != bidsForNextAuction.end()) {
         AppBWRes* bidOfInterest = *iter;
         BidResponse* bidResponse = new BidResponse();
-        cout << "here" << endl;
         bool decision = (decisionVars[i].get(GRB_DoubleAttr_X) == 1 ? true : false);
-        cout << "Decision for bid " << i << " is: " << decisionVars[i].get(GRB_DoubleAttr_X) << endl;
+        cout << "Decision for bid " << i << " is: " << decisionVars[i].get(GRB_DoubleAttr_X) << " ";
+        bidOfInterest->printForDebug();
+        cout << endl;
         if (decision) {
             // Get corresponding bid
             bool startSameTime = false;
@@ -171,8 +323,14 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
             resourceManager.ReserveResources(bidOfInterest->getUlBandwidth(), bidOfInterest->getDlBandwidth(),
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
+
+            // Compute price
+            double bytes = (bidOfInterest->getUlBandwidth() * bidOfInterest->getUlDuration())
+                            + (bidOfInterest->getDlBandwidth() * bidOfInterest->getDlDuration());
+
             // Find the corresponding UE and notify
             bidResponse->setBidResult(true);
+            bidResponse->setPayment(rate*bytes);
 
         } else {
             // Find the corresponding UE and notify
