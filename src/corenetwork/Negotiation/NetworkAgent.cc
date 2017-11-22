@@ -28,29 +28,27 @@ void NetworkAgent::initialize() {
     env = new GRBEnv();
     // Schedule self-timer for clearing auction
     timeOfNextAuction = simTime() + 3;
-  //TODO: not negotiating  scheduleAt(timeOfNextAuction, new cMessage("Auction"));
+    scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 
 void NetworkAgent::finish() {
     resourceManager.recordStats();
 }
 
-void NetworkAgent::handleMessage(cMessage* msg) {
-    resourceManager.clearElapsedEntries();
+/**
+ * returns the total value generated for the network if all winners pay what they bid
+ */
+double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime_t currentTime) {
+    int numOfBids = rpis.size();
+    if(numOfBids<=0) return 0;
 
-    // Clear Auction with bids so far, convey results
-    int numOfBids = bidsForNextAuction.size();
-    if (numOfBids <= 0) {
-        scheduleAt((simtime_t)simTime() + 1, msg);
-        return;
-    }
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     GRBModel model = GRBModel(*env);
     GRBVar* decisionVars = model.addVars(numOfBids, GRB_BINARY);
     list<AppBWRes*>::iterator iter;
     int longestDuration = 0;
     int i = 0;
-    for (iter = bidsForNextAuction.begin(); iter != bidsForNextAuction.end(); iter++) {
+    for (iter = rpis.begin(); iter != rpis.end(); iter++) {
         string s = "x_" + to_string(i);
         decisionVars[i].set(GRB_DoubleAttr_Obj, (*iter)->getBidAmount());
         decisionVars[i].set(GRB_StringAttr_VarName, s);
@@ -67,7 +65,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     model.set(GRB_IntAttr_ModelSense, GRB_MAXIMIZE);
 
     // Constraints
-    simtime_t currentTime = simTime();
     for (int d  = 1; d <= longestDuration; d++) {
         SimTime correspondingSimtime = SimTime(currentTime.dbl() + d);
         GRBLinExpr ulCapConstraint = 0;
@@ -76,7 +73,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         int i = 0;
         double* ulCapacities = new double[numOfBids];
         double* dlCapacities = new double[numOfBids];
-        for (iter = bidsForNextAuction.begin(); iter != bidsForNextAuction.end(); iter++) {
+        for (iter = rpis.begin(); iter != rpis.end(); iter++) {
             string activityType = (*iter)->getActivityType();
             if (activityType == "Video" || activityType == "Audio") {
                 // Only downlink traffic reservation
@@ -140,28 +137,100 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     cout << "Optimization complete" << endl;
     double objval = 0;
     if (optimstatus == GRB_OPTIMAL) {
-      objval = model.get(GRB_DoubleAttr_ObjVal);
-      cout << "Optimal objective: " << objval << endl;
+        objval = model.get(GRB_DoubleAttr_ObjVal);
+        cout << "Optimal objective: " << objval << endl;
     } else if (optimstatus == GRB_INF_OR_UNBD) {
-      throw cRuntimeError("Model is infeasible or unbounded");
+        throw cRuntimeError("Model is infeasible or unbounded");
     } else if (optimstatus == GRB_INFEASIBLE) {
         throw cRuntimeError("Model is infeasible");
     } else if (optimstatus == GRB_UNBOUNDED) {
         throw cRuntimeError("Model is unbounded");
     } else {
-      cout << "Optimization was stopped with status = "
-           << optimstatus << endl;
+        cout << "Optimization was stopped with status = "
+                << optimstatus << endl;
     }
 
+    double totalPayment = 0;
+    iter = rpis.begin();
+    i = 0;
+    while (iter != rpis.end()) {
+        AppBWRes* bidOfInterest = *iter;
+        decisions[i] = (decisionVars[i].get(GRB_DoubleAttr_X) == 1 ? true : false);
+        if(decisions[i]) {
+            totalPayment += bidOfInterest->getBidAmount();
+        }
+        iter++;
+        i++;
+    }
+
+    delete [] decisionVars;
+    delete [] model.getConstrs();
+
+    return totalPayment;
+}
+
+void NetworkAgent::handleMessage(cMessage* msg) {
+    resourceManager.clearElapsedEntries();
+
+    // Clear Auction with bids so far, convey results
+    int numOfBids = bidsForNextAuction.size();
+    if (numOfBids <= 0) {
+        scheduleAt((simtime_t)simTime() + 1, msg);
+        return;
+    }
+
+    // Solve the auction
+    bool* decisions = new bool[numOfBids];
+    simtime_t currentTime = simTime();
+    double totalPayment = solveAuction(bidsForNextAuction, decisions, currentTime);
+
+    // Compute the prices to charge
+    list<AppBWRes*>::iterator iter = bidsForNextAuction.begin();
+    int i = 0;
+    double* pricesToCharge = new double[numOfBids];
+
+    while(iter !=bidsForNextAuction.end()) {
+        AppBWRes* bidOfInterest = *iter;
+        BidResponse* bidResponse = new BidResponse();
+        bool decision = (decisions[i] == 1 ? true : false);
+        if (decision) {
+            // Run auction without this winner
+            list<AppBWRes*> rpis;
+            list<AppBWRes*>::iterator iter_temp = bidsForNextAuction.begin();
+            while (iter_temp != bidsForNextAuction.end()) {
+                AppBWRes* bid = *iter_temp;
+                if(bid!=bidOfInterest)
+                    rpis.push_back(bid);
+                iter_temp++;
+            }
+            bool* decisions_temp = new bool[numOfBids-1];
+            double paymentWithoutWinner = solveAuction(rpis, decisions_temp, currentTime);
+
+            iter_temp = rpis.begin();
+            while(iter_temp != rpis.end()) {
+                rpis.erase(iter_temp++);
+            }
+            delete [] decisions_temp;
+
+            //Price to charge this winner
+            double price = (paymentWithoutWinner)-(totalPayment-bidOfInterest->getBidAmount());
+            if(price<0) price = 0-price;
+            pricesToCharge[i] = price;
+        } else {
+            pricesToCharge[i] = 0;
+        }
+
+        iter++;
+        i++;
+    }
 
     iter = bidsForNextAuction.begin();
     i = 0;
     while (iter != bidsForNextAuction.end()) {
         AppBWRes* bidOfInterest = *iter;
         BidResponse* bidResponse = new BidResponse();
-        cout << "here" << endl;
-        bool decision = (decisionVars[i].get(GRB_DoubleAttr_X) == 1 ? true : false);
-        cout << "Decision for bid " << i << " is: " << decisionVars[i].get(GRB_DoubleAttr_X) << endl;
+        bool decision = (decisions[i] == 1 ? true : false);
+        cout << "Decision for bid " << i << " is: " << decisions[i] << "("<<pricesToCharge[i]<< ")"<< endl;
         if (decision) {
             // Get corresponding bid
             bool startSameTime = false;
@@ -173,7 +242,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
             // Find the corresponding UE and notify
             bidResponse->setBidResult(true);
-
+            bidResponse->setPayment(pricesToCharge[i]);
         } else {
             // Find the corresponding UE and notify
             bidResponse->setBidResult(false);
@@ -187,8 +256,11 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         i++;
         bidsForNextAuction.erase(iter++);
     }
-    delete [] decisionVars;
-    delete [] model.getConstrs();
+
+    //Free arrays
+    delete [] decisions;
+    delete [] pricesToCharge;
+
     // Schedule next auction event
     timeOfNextAuction = (simtime_t)currentTime + 3;
     scheduleAt(timeOfNextAuction, new cMessage("Auction"));
