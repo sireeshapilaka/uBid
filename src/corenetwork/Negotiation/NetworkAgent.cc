@@ -191,7 +191,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
     while(iter !=bidsForNextAuction.end()) {
         AppBWRes* bidOfInterest = *iter;
-        BidResponse* bidResponse = new BidResponse();
         bool decision = (decisions[i] == 1 ? true : false);
         if (decision) {
             // Run auction without this winner
@@ -214,7 +213,8 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
             //Price to charge this winner
             double price = (paymentWithoutWinner)-(totalPayment-bidOfInterest->getBidAmount());
-            if(price<0) price = 0-price;
+            if(price<0)
+                throw cRuntimeError("Invalid price encountered");
             pricesToCharge[i] = price;
         } else {
             pricesToCharge[i] = 0;
