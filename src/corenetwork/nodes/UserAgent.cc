@@ -150,7 +150,63 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         rpi->setUlBandwidth(75);
         submitBid(rpi, bidAmount);
     } else {
-        AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType);
+        // Pick a mode at random based on activity type
+        if(appType=="RealTimeVideo") {
+            int mode = intuniform(rng, 1, 4);
+            switch (mode) {
+                case 1:
+                    askingDownlinkThroughput = REALTIMEHD_HIGH;
+                    break;
+                case 2:
+                    askingDownlinkThroughput = REALTIMEHD_LOW;
+                    break;
+                case 3:
+                    askingDownlinkThroughput = REALTIME_HIGH;
+                    break;
+                default:
+                    askingDownlinkThroughput = REALTIME_LOW;
+                    break;
+            }
+            askingUplinkThroughput = askingDownlinkThroughput;
+        } else if(appType=="Audio") {
+            int mode = intuniform(rng, 1, 3);
+            switch (mode) {
+                case 1:
+                    askingDownlinkThroughput = AUDIO_HIGH;
+                    break;
+                case 2:
+                    askingDownlinkThroughput = AUDIO_STD;
+                    break;
+                default:
+                    askingDownlinkThroughput = AUDIO_LOW;
+                    break;
+            }
+            askingUplinkThroughput = 75;
+        } else if(appType=="Video") {
+            int mode = intuniform(rng, 1, 5);
+            switch (mode) {
+            case 1:
+                askingDownlinkThroughput = VIDEO_VHIGH;
+                break;
+            case 2:
+                askingDownlinkThroughput = VIDEO_HIGH;
+                break;
+            case 3:
+                askingDownlinkThroughput = VIDEO_STD;
+                break;
+            case 4:
+                askingDownlinkThroughput = VIDEO_MEDIUM;
+                break;
+            default:
+                askingDownlinkThroughput = VIDEO_LOW;
+                break;
+            }
+            askingDownlinkThroughput = 1000*askingDownlinkThroughput;
+            askingUplinkThroughput = 75;
+        }
+        askingDlDuration = ceil(askingDownlinkBytes*8/(askingDownlinkThroughput*1000));
+        askingUlDuration = ceil(askingUplinkBytes*8/(askingUplinkThroughput*1000));
+        AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
         //TODO: not negoitating
         networkAgent->getRPIs(bwReq);
         // Sent RPI request to the Network

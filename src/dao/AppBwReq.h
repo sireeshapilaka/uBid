@@ -25,13 +25,21 @@ private:
     unsigned int uplinkBytes;
     unsigned int downlinkBytes;
     string activityType;
+    unsigned int ulDuration;
+    unsigned int dlDuration;
+    unsigned int ulBandwidth;
+    unsigned int dlBandwidth;
 
 public:
-    AppBWReq(unsigned int uplinkBytes, unsigned int downlinkBytes, string activityType);
+    AppBWReq(unsigned int uplinkBytes, unsigned int downlinkBytes, string activityType, unsigned int ulDuration, unsigned int dlDuration, unsigned int ulBandwidth, unsigned int dlBandwidth);
     virtual ~AppBWReq();
     unsigned int getUplinkBytes();
     unsigned int getDownlinkBytes();
     string getActivityType();
+    unsigned int getUlDuration();
+    unsigned int getDlDuration();
+    unsigned int getUlBandwidth();
+    unsigned int getDlBandwidth();
 };
 
 #endif /* APPBWREQ_H_ */

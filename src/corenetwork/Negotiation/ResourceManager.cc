@@ -595,6 +595,82 @@ NetworkLoadLevel ResourceManager::computeNwLoadLevelDuringRequestedAlloc(int cel
     }
 }
 
+double* ResourceManager::getResourceAllocationBundle(double duration, string appType, double throughput, int direction) {
+    unsigned int d = (ceil(duration)<UINT_MAX) ? ceil(duration) : UINT_MAX;
+    double* allocationThroughputs = new double[d];
+    double cellCapacity;
+    if (direction == 0){ // Uplink
+        cellCapacity = ulCellCapacities->front();
+    } else { //Downlink
+        cellCapacity = dlCellCapacities->front();
+    }
+
+    double* modesList;
+    int modes;
+    if(appType=="RealTimeVideo") {
+        modesList = new double[4];
+        modes = 4;
+        modesList[0] = REALTIMEHD_HIGH;
+        modesList[1] = REALTIMEHD_LOW;
+        modesList[2] = REALTIME_HIGH;
+        modesList[3] = REALTIME_LOW;
+    } else if(appType=="Audio") {
+        modesList = new double[3];
+        modes = 3;
+        modesList[0] = AUDIO_HIGH;
+        modesList[1] = AUDIO_STD;
+        modesList[2] = AUDIO_LOW;
+    } else if(appType=="Video") {
+        modesList = new double[5];
+        modes = 5;
+        modesList[0] = VIDEO_VHIGH*1000;
+        modesList[1] = VIDEO_HIGH*1000;
+        modesList[2] = VIDEO_STD*1000;
+        modesList[3] = VIDEO_MEDIUM*1000;
+        modesList[4] = VIDEO_LOW*1000;
+    } else {
+        modesList = new double[1];
+        modes = 1;
+        modesList[0] = throughput;
+    }
+
+    int startMode = 0;
+    while(startMode<modes) {
+        if (throughput>=modesList[startMode]) {
+            startMode--;
+            break;
+        }
+        startMode++;
+    }
+    if(startMode<0) startMode = 0;
+    if(startMode>modes-1) startMode = modes-1;
+
+    simtime_t currentTime = simTime();
+    int t = 0;
+    while(t<d) {
+        simtime_t tmpTime = currentTime+1+t;
+        double peakLoad = computePeakLoadOnGivenCellDuringGivenDuration(0, direction, tmpTime, tmpTime+1 );
+        int currMode = startMode;
+
+        while(currMode<modes) {
+            if(peakLoad + modesList[currMode] <= cellCapacity)
+                break;
+            currMode++;
+        }
+
+        if(currMode<modes)
+            allocationThroughputs[t] = modesList[currMode];
+        else
+            allocationThroughputs[t] = 0;
+
+        t++;
+    }
+
+    delete [] modesList;
+    return allocationThroughputs;
+
+}
+
 bool ResourceManager::isResourceAllocationFeasible(double duration, double throughput, int direction) {
     double cellCapacity;
     if (direction == 0){ // Uplink

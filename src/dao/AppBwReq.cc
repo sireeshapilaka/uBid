@@ -16,10 +16,14 @@
 #include <AppBwReq.h>
 
 
-AppBWReq::AppBWReq(unsigned int uplinkBytes, unsigned int downlinkBytes, string activityType) {
+AppBWReq::AppBWReq(unsigned int uplinkBytes, unsigned int downlinkBytes, string activityType, unsigned int ulDuration, unsigned int dlDuration, unsigned int ulBandwidth, unsigned int dlBandwidth) {
     this->uplinkBytes = uplinkBytes;
     this->downlinkBytes = downlinkBytes;
     this->activityType = activityType;
+    this->ulDuration = ulDuration;
+    this->dlDuration = dlDuration;
+    this->ulBandwidth = ulBandwidth;
+    this->dlBandwidth = dlBandwidth;
 }
 AppBWReq::~AppBWReq() {
 
@@ -29,6 +33,18 @@ unsigned int AppBWReq::getUplinkBytes() {
 }
 unsigned int AppBWReq::getDownlinkBytes() {
     return downlinkBytes;
+}
+unsigned int AppBWReq::getUlDuration() {
+    return ulDuration;
+}
+unsigned int AppBWReq::getDlDuration() {
+    return dlDuration;
+}
+unsigned int AppBWReq::getUlBandwidth() {
+    return ulBandwidth;
+}
+unsigned int AppBWReq::getDlBandwidth() {
+    return dlBandwidth;
 }
 string AppBWReq::getActivityType() {
     return activityType;
