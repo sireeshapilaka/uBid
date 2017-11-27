@@ -78,30 +78,30 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
             if (activityType == "Video" || activityType == "Audio") {
                 // Only downlink traffic reservation
                 if ((*iter)->getDlDuration() >= d) {
-                    dlCapacities[i] = (*iter)->getDlBandwidth();
+                    dlCapacities[i] = (*iter)->getDlBandwidth(d-1);
                 } else {
                     dlCapacities[i] = 0;
                 }
                 ulCapacities[i] = 0;
             } else if (activityType == "RealtimeVideo") {
                 if ((*iter)->getUlDuration() >= d) {
-                    ulCapacities[i] = (*iter)->getUlBandwidth();
+                    ulCapacities[i] = (*iter)->getUlBandwidth(d-1);
                 } else {
                     ulCapacities[i] = 0;
                 }
                 if ((*iter)->getDlDuration() >= d) {
-                    dlCapacities[i] = (*iter)->getDlBandwidth();
+                    dlCapacities[i] = (*iter)->getDlBandwidth(d-1);
                 } else {
                     dlCapacities[i] = 0;
                 }
             } else { // Bursty traffic -> First schedule Uplink, then schedule Downlink
                 if ((*iter)->getUlDuration() >= d) {
-                    ulCapacities[i] = (*iter)->getUlBandwidth();
+                    ulCapacities[i] = (*iter)->getUlBandwidth(d-1);
                     dlCapacities[i] = 0;
                 } else {
                     ulCapacities[i] = 0;
                     if ((*iter)->getDlDuration() + (*iter)->getUlDuration() >= d) {
-                        dlCapacities[i] = (*iter)->getDlBandwidth();
+                        dlCapacities[i] = (*iter)->getDlBandwidth(d-1);
                     } else {
                         dlCapacities[i] = 0;
                     }
@@ -286,104 +286,25 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     // Generate RPIs for this BW request and return
     list<AppBWRes*> rpis;
     string activityType = appBwReq->getActivityType();
-    unsigned int downlinkSize = ((8*appBwReq->getDownlinkBytes()) < appBwReq->getDownlinkBytes() ? UINT_MAX: 8*appBwReq->getDownlinkBytes());
-    unsigned int uplinkSize = ((8*appBwReq->getUplinkBytes()) < appBwReq->getUplinkBytes() ? UINT_MAX: 8*appBwReq->getUplinkBytes());
+    int ulDuration = 0;
+    double *ulBandwidth = NULL;
+    if(activityType=="RealtimeVideo" || activityType=="TCP" || activityType=="Browser") {
+        ulDuration = appBwReq->getUlDuration();
+        ulBandwidth = resourceManager.getResourceAllocationBundle(ulDuration, activityType, appBwReq->getUlBandwidth(), 0);
+    }
+    int dlDuration = appBwReq->getDlDuration();
+    double *dlBandwidth = resourceManager.getResourceAllocationBundle(dlDuration, activityType, appBwReq->getDlBandwidth(), 1);
+
     delete appBwReq;
 
-    AppBWRes* appBwRes = NULL;
-    bool impossible = false;
-    if (activityType == "Video") {
-        double highestPossibleBandwidth = VIDEO_VHIGH*1000; // InKbps
-        double duration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-        if (true) {
-            highestPossibleBandwidth = VIDEO_HIGH*1000;
-            duration = (double)(downlinkSize/(1000*highestPossibleBandwidth));
-            if (true) {
-                highestPossibleBandwidth = VIDEO_STD*1000;
-                duration = (double)(downlinkSize/(1000.0*highestPossibleBandwidth));
-                if (false) {
-                    highestPossibleBandwidth = VIDEO_MEDIUM*1000;
-                    duration = (double)(downlinkSize/(1000.0*highestPossibleBandwidth));
-                    if (!resourceManager.isResourceAllocationFeasible(duration, highestPossibleBandwidth, 1)) {
-                        highestPossibleBandwidth = VIDEO_LOW*1000;
-                        duration = (double)(downlinkSize/(1000.0*highestPossibleBandwidth));
-                        if (!resourceManager.isResourceAllocationFeasible(duration, highestPossibleBandwidth, 1)) {
-                            impossible = true;
-                        }
-                    }
-                }
-            }
-        }
-   //     if (!impossible) {
-            appBwRes = new AppBWRes();
-            appBwRes->setDlBandwidth(highestPossibleBandwidth);
-            appBwRes->setDlDuration(ceil(duration));
-            appBwRes->setActivityType("Video");
-    //    }
-    } else if (activityType == "Audio") {
-        double highestPossibleBandwidth = AUDIO_HIGH;
-        double duration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-        if (true) {
-            highestPossibleBandwidth = AUDIO_STD;
-            duration = (double)(downlinkSize/(1000.0*highestPossibleBandwidth));
-            if (false) {
-                highestPossibleBandwidth = AUDIO_LOW;
-                duration = (double)(downlinkSize/(1000.0*highestPossibleBandwidth));
-                if (!resourceManager.isResourceAllocationFeasible(duration, highestPossibleBandwidth, 1)) {
-                    impossible = true;
-                }
-            }
-        }
-    //    if (!impossible) {
-            appBwRes = new AppBWRes();
-            appBwRes->setDlBandwidth(highestPossibleBandwidth);
-            appBwRes->setDlDuration(ceil(duration));
-            appBwRes->setActivityType("Audio");
-    //    }
-    } else if (activityType == "RealtimeVideo") {
-        double highestPossibleBandwidth = REALTIMEHD_HIGH;
-        double dlDuration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-        double ulDuration = (double)uplinkSize/(1000.0*highestPossibleBandwidth);
-        bool isDownlink = downlinkSize > 0 ? true : false;
-        bool isUplink = uplinkSize > 0 ? true : false;
-        if (true) {
-            highestPossibleBandwidth = REALTIMEHD_LOW;
-            double dlDuration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-            double ulDuration = (double)uplinkSize/(1000.0*highestPossibleBandwidth);
-            if (true) {
-                highestPossibleBandwidth = REALTIME_HIGH;
-                double dlDuration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-                double ulDuration = (double)uplinkSize/(1000.0*highestPossibleBandwidth);
-                if (false) {
-                    highestPossibleBandwidth = REALTIME_LOW;
-                    double dlDuration = (double)downlinkSize/(1000.0*highestPossibleBandwidth);
-                    double ulDuration = (double)uplinkSize/(1000.0*highestPossibleBandwidth);
-                    if (!(resourceManager.isResourceAllocationFeasible(dlDuration, highestPossibleBandwidth, 1)) &&
-                                   (resourceManager.isResourceAllocationFeasible(ulDuration, highestPossibleBandwidth, 0))) {
-                        impossible = true;
-                    }
-                }
-            }
-        }
-   //     if (!impossible) {
-            appBwRes = new AppBWRes();
-            if (isDownlink) {
-                appBwRes->setDlBandwidth(highestPossibleBandwidth);
-                appBwRes->setDlDuration(ceil(dlDuration));
-            }
-            if (isUplink) {
-                appBwRes->setUlBandwidth(highestPossibleBandwidth);
-                appBwRes->setUlDuration(ceil(ulDuration));
-            }
-            appBwRes->setActivityType("RealtimeVideo");
-    //    }
-    }
+    AppBWRes* appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
+    appBwRes->setActivityType(activityType);
+
     if (appBwRes != NULL) {
         bool sameStartTime = (appBwRes->getActivityType() == "RealtimeVideo" ? true : false);
         resourceManager.ReserveResourcesFake(appBwRes->getUlBandwidth(), appBwRes->getDlBandwidth(), appBwRes->getUlDuration(), appBwRes->getDlDuration(),
                 sameStartTime, simTime(), activityType);
-        //TODO: not negotiating
-        // rpis.push_back(appBwRes);
+        rpis.push_back(appBwRes);
     }
     return rpis;
 }

@@ -16,27 +16,48 @@
 #include <AppBwRes.h>
 
 AppBWRes::AppBWRes() {}
-AppBWRes::AppBWRes(int dlDuration, int ulDuration, double dlBandwidth, double ulBandwidth) {
+AppBWRes::AppBWRes(int dlDuration, int ulDuration, double *dlBandwidth, double *ulBandwidth) {
     this->dlBandwidth = dlBandwidth;
     this->ulBandwidth = ulBandwidth;
     this->dlDuration = dlDuration;
     this->ulDuration = ulDuration;
 }
-AppBWRes::~AppBWRes() {}
-void AppBWRes::setDlBandwidth(double bandwidth) {
+AppBWRes::~AppBWRes() {
+    if(dlBandwidth!=NULL) {
+        delete [] dlBandwidth;
+    }
+    if(ulBandwidth!=NULL) {
+        delete [] ulBandwidth;
+    }
+}
+void AppBWRes::setDlBandwidth(double *bandwidth) {
     this->dlBandwidth = bandwidth;
 }
 
-void AppBWRes::setUlBandwidth(double bandwidth) {
+void AppBWRes::setUlBandwidth(double *bandwidth) {
     this->ulBandwidth = bandwidth;
 }
 
-double AppBWRes::getDlBandwidth() {
+double* AppBWRes::getDlBandwidth() {
     return this->dlBandwidth;
 }
 
-double AppBWRes::getUlBandwidth() {
+double* AppBWRes::getUlBandwidth() {
     return this->ulBandwidth;
+}
+
+double AppBWRes::getDlBandwidth(int i) {
+    if(this->dlBandwidth!=NULL && i<this->dlDuration)
+        return this->dlBandwidth[i];
+    else
+        return 0;
+}
+
+double AppBWRes::getUlBandwidth(int i) {
+    if(this->ulBandwidth!=NULL && i<this->ulDuration)
+        return this->ulBandwidth[i];
+    else
+        return 0;
 }
 
 

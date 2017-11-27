@@ -21,6 +21,7 @@
 #include <string.h>
 using namespace std;
 using namespace omnetpp;
+#include <util/ModeConstants.h>
 //typedef struct _bidCandidate{
 //    BidDescriptor *bidDesc;
 //    int seqNum;
@@ -36,25 +37,7 @@ typedef std::map<SimTime, double> CellResourceAllocMap;
 typedef std::map<SimTime, double> CellAllocationsCountMap;
 
 class ResourceManager {
-private:
-    // Definitions
-    // in Mbps
-    const double VIDEO_LOW = .5;
-    const double VIDEO_MEDIUM = 1.5;
-    const double VIDEO_STD = 3;
-    const double VIDEO_HIGH = 5;
-    const double VIDEO_VHIGH = 8;
 
-    // In Kbps
-    const double AUDIO_LOW = 64;
-    const double AUDIO_STD = 96;
-    const double AUDIO_HIGH = 120;
-
-    // In Realtime Kbps
-    const double REALTIME_LOW = 400;
-    const double REALTIME_HIGH = 500;
-    const double REALTIMEHD_LOW = 1200;
-    const double REALTIMEHD_HIGH = 1500;
 
 public:
     //private:
@@ -108,10 +91,10 @@ public:
     CellResourceAllocMap* downlinkAudioMap = new CellResourceAllocMap();
     CellAllocationsCountMap* dlAudioCount = new CellAllocationsCountMap();
 
-    void ReserveResourcesFake(double uplinkBandwidth, double downlinkBandwidth, int uplinkDuration, int downlinkDuration,
+    void ReserveResourcesFake(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration,
             bool startSameTime, simtime_t startTime, string activityType);
 
-    void ReserveResources(double uplinkBandwidth, double downlinkBandwidth, int uplinkDuration, int downlinkDuration, bool startSameTime, simtime_t startTime);
+    void ReserveResources(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration, bool startSameTime, simtime_t startTime);
     double computePeakLoadOnGivenCellDuringGivenDuration(int cell, int direction, simtime_t startTime, simtime_t endTime);
 
     // end private
@@ -127,7 +110,7 @@ public:
 //    double getProjectedCapacity(BidComponent *bidComponent);
     void recordStats();
     bool isResourceAllocationFeasible(double duration, double throughput, int direction);
-    double* getResourceAllocationBundle(double duration, string appType, double throughput, int direction);
+    double* getResourceAllocationBundle(int duration, string appType, double throughput, int direction);
 };
 
 #endif /* RESOURCEMANAGER_H_ */

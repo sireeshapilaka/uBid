@@ -322,7 +322,7 @@ void ResourceManager::clearElapsedEntries() {
 
 
 // Bandwidth in Kbps and duration in seconds
-void ResourceManager::ReserveResources(double uplinkBandwidth, double downlinkBandwidth, int uplinkDuration, int downlinkDuration,
+void ResourceManager::ReserveResources(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration,
         bool startSameTime, simtime_t startTime){
     std::vector<CellResourceAllocMap*> *resrcAllocMapList;
     std::vector<CellAllocationsCountMap*> *resrcAllocCountMapList;
@@ -336,12 +336,13 @@ void ResourceManager::ReserveResources(double uplinkBandwidth, double downlinkBa
         std::map<SimTime,double>::iterator iter;
         std::map<SimTime,double>::iterator countIter;
 
+        int i = 0;
         for (SimTime t = SimTime(startTime); t < SimTime(startTime + uplinkDuration); t = t + SimTime(1)  ) {
             iter = resrcAllocMap->find(t);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth));
+                resrcAllocMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth[i]));
             } else {
-                iter->second = iter->second + uplinkBandwidth;
+                iter->second = iter->second + uplinkBandwidth[i];
             }
 
             countIter = resrcAllocCountMap->find(t);
@@ -350,6 +351,7 @@ void ResourceManager::ReserveResources(double uplinkBandwidth, double downlinkBa
             } else {
                 countIter->second = countIter->second + 1;
             }
+            i++;
        }
     }
 
@@ -368,12 +370,13 @@ void ResourceManager::ReserveResources(double uplinkBandwidth, double downlinkBa
         } else if (uplinkDuration > 0 && !startSameTime) {
             realStartTime = startTime.dbl() + uplinkDuration;
         }
+        int i = 0;
         for (SimTime t = SimTime(realStartTime); t < SimTime(realStartTime + downlinkDuration); t = t + SimTime(1)  ) {
             iter = resrcAllocMap->find(t);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                resrcAllocMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
             } else {
-                iter->second = iter->second + downlinkBandwidth;
+                iter->second = iter->second + downlinkBandwidth[i];
             }
 
             countIter = resrcAllocCountMap->find(t);
@@ -382,13 +385,14 @@ void ResourceManager::ReserveResources(double uplinkBandwidth, double downlinkBa
             } else {
                 countIter->second = countIter->second + 1;
             }
+            i++;
         }
     }
 }
 
 
 // Bandwidth in Kbps and duration in seconds
-void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downlinkBandwidth, int uplinkDuration, int downlinkDuration,
+void ResourceManager::ReserveResourcesFake(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration,
         bool startSameTime, simtime_t startTime, string activityType){
     std::vector<CellResourceAllocMap*> *resrcAllocMapList;
     std::vector<CellAllocationsCountMap*> *resrcAllocCountMapList;
@@ -402,12 +406,13 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
         std::map<SimTime,double>::iterator iter;
         std::map<SimTime,double>::iterator countIter;
 
+        int i = 0;
         for (SimTime t = SimTime(startTime); t < SimTime(startTime + uplinkDuration); t = t + SimTime(1)  ) {
             iter = resrcAllocMap->find(t);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth));
+                resrcAllocMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth[i]));
             } else {
-                iter->second = iter->second + uplinkBandwidth;
+                iter->second = iter->second + uplinkBandwidth[i];
             }
 
             countIter = resrcAllocCountMap->find(t);
@@ -420,9 +425,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             if (activityType == "RealtimeVideo") {
                 iter = uplinkUDPMap->find(t);
                 if (iter == uplinkUDPMap->end()){
-                    uplinkUDPMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth));
+                    uplinkUDPMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + uplinkBandwidth;
+                    iter->second = iter->second + uplinkBandwidth[i];
                 }
 
                 countIter = ulUDPCount->find(t);
@@ -434,9 +439,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             } else if (activityType == "TCP" || activityType == "Browser") {
                 iter = uplinkBurstyMap->find(t);
                 if (iter == uplinkBurstyMap->end()){
-                    uplinkBurstyMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth));
+                    uplinkBurstyMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + uplinkBandwidth;
+                    iter->second = iter->second + uplinkBandwidth[i];
                 }
 
                 countIter = ulBurstyCount->find(t);
@@ -446,8 +451,10 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
                     countIter->second = countIter->second + 1;
                 }
             } else {
+                cout << activityType << endl;
                 throw cRuntimeError("Illegal activity type here");
             }
+            i++;
        }
     }
 
@@ -466,12 +473,13 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
         } else if (uplinkDuration > 0 && !startSameTime) {
             realStartTime = startTime.dbl() + uplinkDuration;
         }
+        int i = 0;
         for (SimTime t = SimTime(realStartTime); t < SimTime(realStartTime + downlinkDuration); t = t + SimTime(1)  ) {
             iter = resrcAllocMap->find(t);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                resrcAllocMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
             } else {
-                iter->second = iter->second + downlinkBandwidth;
+                iter->second = iter->second + downlinkBandwidth[i];
             }
 
             countIter = resrcAllocCountMap->find(t);
@@ -484,9 +492,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             if (activityType == "Audio") {
                 iter = downlinkAudioMap->find(t);
                 if (iter == downlinkAudioMap->end()){
-                    downlinkAudioMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                    downlinkAudioMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + downlinkBandwidth;
+                    iter->second = iter->second + downlinkBandwidth[i];
                 }
 
                 countIter = dlAudioCount->find(t);
@@ -498,9 +506,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             } else if (activityType == "Video") {
                 iter = downlinkVideoMap->find(t);
                 if (iter == downlinkVideoMap->end()){
-                    downlinkVideoMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                    downlinkVideoMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + downlinkBandwidth;
+                    iter->second = iter->second + downlinkBandwidth[i];
                 }
 
                 countIter = dlVideoCount->find(t);
@@ -512,9 +520,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             } else if (activityType == "RealtimeVideo") {
                 iter = downlinkUDPMap->find(t);
                 if (iter == downlinkUDPMap->end()){
-                    downlinkUDPMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                    downlinkUDPMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + downlinkBandwidth;
+                    iter->second = iter->second + downlinkBandwidth[i];
                 }
 
                 countIter = dlUDPCount->find(t);
@@ -526,9 +534,9 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
             } else {
                 iter = downlinkBurstyMap->find(t);
                 if (iter == downlinkBurstyMap->end()){
-                    downlinkBurstyMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth));
+                    downlinkBurstyMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
                 } else {
-                    iter->second = iter->second + downlinkBandwidth;
+                    iter->second = iter->second + downlinkBandwidth[i];
                 }
 
                 countIter = dlBurstyCount->find(t);
@@ -538,6 +546,7 @@ void ResourceManager::ReserveResourcesFake(double uplinkBandwidth, double downli
                     countIter->second = countIter->second + 1;
                 }
             }
+            i++;
         }
     }
 }
@@ -595,9 +604,8 @@ NetworkLoadLevel ResourceManager::computeNwLoadLevelDuringRequestedAlloc(int cel
     }
 }
 
-double* ResourceManager::getResourceAllocationBundle(double duration, string appType, double throughput, int direction) {
-    unsigned int d = (ceil(duration)<UINT_MAX) ? ceil(duration) : UINT_MAX;
-    double* allocationThroughputs = new double[d];
+double* ResourceManager::getResourceAllocationBundle(int duration, string appType, double throughput, int direction) {
+    double* allocationThroughputs = new double[duration];
     double cellCapacity;
     if (direction == 0){ // Uplink
         cellCapacity = ulCellCapacities->front();
@@ -623,11 +631,11 @@ double* ResourceManager::getResourceAllocationBundle(double duration, string app
     } else if(appType=="Video") {
         modesList = new double[5];
         modes = 5;
-        modesList[0] = VIDEO_VHIGH*1000;
-        modesList[1] = VIDEO_HIGH*1000;
-        modesList[2] = VIDEO_STD*1000;
-        modesList[3] = VIDEO_MEDIUM*1000;
-        modesList[4] = VIDEO_LOW*1000;
+        modesList[0] = VIDEO_VHIGH;
+        modesList[1] = VIDEO_HIGH;
+        modesList[2] = VIDEO_STD;
+        modesList[3] = VIDEO_MEDIUM;
+        modesList[4] = VIDEO_LOW;
     } else {
         modesList = new double[1];
         modes = 1;
@@ -647,7 +655,7 @@ double* ResourceManager::getResourceAllocationBundle(double duration, string app
 
     simtime_t currentTime = simTime();
     int t = 0;
-    while(t<d) {
+    while(t<duration) {
         simtime_t tmpTime = currentTime+1+t;
         double peakLoad = computePeakLoadOnGivenCellDuringGivenDuration(0, direction, tmpTime, tmpTime+1 );
         int currMode = startMode;

@@ -166,9 +166,11 @@ $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.
 	dao/AppBwReq.h \
 	dao/AppBwRes.h \
 	dao/BidResponse.h \
+	util/ModeConstants.h \
 	util/StrUtils.h
 $O/corenetwork/Negotiation/ResourceManager.o: corenetwork/Negotiation/ResourceManager.cc \
-	corenetwork/Negotiation/ResourceManager.h
+	corenetwork/Negotiation/ResourceManager.h \
+	util/ModeConstants.h
 $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
@@ -180,6 +182,7 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	dao/AppBwRes.h \
 	dao/BidResponse.h \
 	util/AppTrafficParser.h \
+	util/ModeConstants.h \
 	util/StrUtils.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
@@ -191,6 +194,7 @@ $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	dao/AppBwReq.h \
 	dao/AppBwRes.h \
 	dao/BidResponse.h \
+	util/ModeConstants.h \
 	util/StrUtils.h
 $O/dao/ActivityDAO.o: dao/ActivityDAO.cc \
 	dao/ActivityDAO.h

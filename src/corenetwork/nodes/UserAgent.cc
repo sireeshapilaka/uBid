@@ -30,6 +30,7 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
     bool bidding = true;
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
+        /*
         if (ongoingActivity == "Video" || ongoingActivity == "Audio") {
             rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
         } else if (ongoingActivity == "RealtimeVideo") {
@@ -37,7 +38,7 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
             rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
         } else {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
-        }
+        }*/
 
         if (bidding) {
             // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
@@ -146,8 +147,16 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         rpi->setDlDuration(desiredDurationDownlink);
         rpi->setUlDuration(desiredDurationUplink);
         // Bandwidth specified in Kbps
-        rpi->setDlBandwidth(1000);
-        rpi->setUlBandwidth(75);
+        double *dlBw = new double[desiredDurationDownlink];
+        double *ulBw = new double[desiredDurationUplink];
+        for(int i=0; i<desiredDurationDownlink; i++) {
+            dlBw[i] = 1000;
+        }
+        for(int i=0; i<desiredDurationUplink; i++) {
+            ulBw[i] = 75;
+        }
+        rpi->setDlBandwidth(dlBw);
+        rpi->setUlBandwidth(ulBw);
         submitBid(rpi, bidAmount);
     } else {
         // Pick a mode at random based on activity type
@@ -201,18 +210,14 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
                 askingDownlinkThroughput = VIDEO_LOW;
                 break;
             }
-            askingDownlinkThroughput = 1000*askingDownlinkThroughput;
             askingUplinkThroughput = 75;
         }
         askingDlDuration = ceil(askingDownlinkBytes*8/(askingDownlinkThroughput*1000));
         askingUlDuration = ceil(askingUplinkBytes*8/(askingUplinkThroughput*1000));
         AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
         //TODO: not negoitating
-        networkAgent->getRPIs(bwReq);
+        //networkAgent->getRPIs(bwReq);
         // Sent RPI request to the Network
-
-
-        //TODO: not negoitating
-        //handleRPIResponse(networkAgent->getRPIs(bwReq));
+        handleRPIResponse(networkAgent->getRPIs(bwReq));
     }
 }

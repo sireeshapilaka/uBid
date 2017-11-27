@@ -25,8 +25,8 @@ using namespace std;
 enum status {granted = 1,rejected,revoked,released,partially_granted};
 
 class AppBWRes: public cMessage {
-    double dlBandwidth = 0.0;
-    double ulBandwidth = 0.0;
+    double *dlBandwidth = NULL;
+    double *ulBandwidth = NULL;
     int dlDuration = 0;
     int ulDuration = 0;
     string activityType;
@@ -34,13 +34,15 @@ class AppBWRes: public cMessage {
     int ueId;
 public:
     AppBWRes();
-    AppBWRes(int dlDuration, int ulDuration, double dlBandwidth, double ulBandwidth);
+    AppBWRes(int dlDuration, int ulDuration, double *dlBandwidth, double *ulBandwidth);
     virtual ~AppBWRes();
 
-    void setDlBandwidth(double bandwidth);
-    void setUlBandwidth(double bandwidth);
-    double getDlBandwidth();
-    double getUlBandwidth();
+    void setDlBandwidth(double *bandwidth);
+    void setUlBandwidth(double *bandwidth);
+    double *getDlBandwidth();
+    double *getUlBandwidth();
+    double getDlBandwidth(int i);
+    double getUlBandwidth(int i);
 
     void setDlDuration(int dlDuration);
     void setUlDuration(int ulDuration);

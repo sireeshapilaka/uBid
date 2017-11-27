@@ -25,6 +25,7 @@
 #include <dao/AppAccessResponse.h>
 #include <dao/BidResponse.h>
 #include <util/StrUtils.h>
+#include <util/ModeConstants.h>
 
 using namespace omnetpp;
 using namespace std;
@@ -46,24 +47,6 @@ public:
     void sendRPIResponse(BidResponse* bidResponse);
 
     int expectedDurationActivity = 0;
-    // Definitions
-    // in Mbps
-    const double VIDEO_LOW = .5;
-    const double VIDEO_MEDIUM = 1.5;
-    const double VIDEO_STD = 3;
-    const double VIDEO_HIGH = 5;
-    const double VIDEO_VHIGH = 8;
-
-    // In Kbps
-    const double AUDIO_LOW = 64;
-    const double AUDIO_STD = 96;
-    const double AUDIO_HIGH = 120;
-
-    // In Realtime Kbps
-    const double REALTIME_LOW = 400;
-    const double REALTIME_HIGH = 500;
-    const double REALTIMEHD_LOW = 1200;
-    const double REALTIMEHD_HIGH = 1500;
 
 protected:
   virtual void initialize() override;
