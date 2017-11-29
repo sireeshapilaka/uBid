@@ -25,9 +25,11 @@
 #include <corenetwork/Negotiation/NetworkAgent.h>
 #include <corenetwork/nodes/Ue.h>
 #include <util/ModeConstants.h>
+#include <util/UaUtils.h>
 
 using namespace std;
 using namespace omnetpp;
+using namespace uaUtils;
 
 class UserAgent {
 public:
@@ -38,6 +40,7 @@ public:
     void handleRPIResponse(list<AppBWRes*> rpis);
     void handleBidResponse(BidResponse* bidResult);
     void submitBid(AppBWRes* rpi, double budget);
+    double getUtility(AppBWRes* rpi);
 
 private:
     Ue* containingUe;
@@ -62,6 +65,8 @@ private:
     int myName = -1;
     NetworkAgent* networkAgent = NULL;
     cRNG* rng = NULL;
+
+    double alpha = 0;
 
 };
 

@@ -46,6 +46,7 @@ OBJS = \
     $O/dao/ActivityDAO.o \
     $O/dao/AppBwReq.o \
     $O/dao/AppAccessResponse.o \
+    $O/util/UaUtils.o \
     $O/util/StrUtils.o \
     $O/util/AppTrafficParser.o
 
@@ -183,7 +184,8 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	dao/BidResponse.h \
 	util/AppTrafficParser.h \
 	util/ModeConstants.h \
-	util/StrUtils.h
+	util/StrUtils.h \
+	util/UaUtils.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
@@ -195,7 +197,8 @@ $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	dao/AppBwRes.h \
 	dao/BidResponse.h \
 	util/ModeConstants.h \
-	util/StrUtils.h
+	util/StrUtils.h \
+	util/UaUtils.h
 $O/dao/ActivityDAO.o: dao/ActivityDAO.cc \
 	dao/ActivityDAO.h
 $O/dao/AppAccessResponse.o: dao/AppAccessResponse.cc \
@@ -211,4 +214,7 @@ $O/util/AppTrafficParser.o: util/AppTrafficParser.cc \
 	util/AppTrafficParser.h
 $O/util/StrUtils.o: util/StrUtils.cc \
 	util/StrUtils.h
+$O/util/UaUtils.o: util/UaUtils.cc \
+	util/ModeConstants.h \
+	util/UaUtils.h
 

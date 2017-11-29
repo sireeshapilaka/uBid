@@ -18,6 +18,7 @@
 UserAgent::UserAgent(Ue* containingUe, double budgetPerSession) {
     this->containingUe = containingUe;
     this->budget = budgetPerSession;
+    this->alpha = uaUtils::genAlpha();
 }
 
 UserAgent::~UserAgent() {
@@ -29,7 +30,7 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
     bool bidding = true;
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
-        /*
+
         if (ongoingActivity == "Video" || ongoingActivity == "Audio") {
             rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
         } else if (ongoingActivity == "RealtimeVideo") {
@@ -37,7 +38,11 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
             rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
         } else {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
-        }*/
+        }
+
+        if(rpiOfInterest!=NULL)
+            cout << "Utility for user " << this->containingUe->getId() << " is: " << getUtility(rpiOfInterest) << endl;
+
 
         if (bidding) {
             // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
@@ -195,4 +200,29 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         // Sent RPI request to the Network
         handleRPIResponse(networkAgent->getRPIs(bwReq));
     }
+}
+
+double UserAgent::getUtility(AppBWRes* rpi) {
+    // TODO: There should be jitter penalty
+    // Ignoring uplink
+    double phisum = 0;
+    int duration = rpi->getDlDuration();
+    int i;
+    string app = rpi->getActivityType();
+    double phi_asked = calcPhiApp(app, askingDownlinkThroughput);
+    double timeFactor = 1/duration; //t_i is always 1 sec
+
+    for(i=0; i<duration; i++) {
+        double phi_given = calcPhiApp(app, rpi->getDlBandwidth(i));
+        double iTerm = phi_given/(1+phi_asked-phi_given);
+        phisum += iTerm;
+    }
+
+    double timeInMin = ((double)duration)/60;
+    double a = 1-(this->alpha);
+    double tTerm = (pow(timeInMin,a))/a;
+    //cout << timeInMin << ", "<< a << ", "<< tTerm << ", " << phisum << ", " << timeFactor << " >> ";
+
+    return tTerm*phisum*timeFactor;
+
 }
