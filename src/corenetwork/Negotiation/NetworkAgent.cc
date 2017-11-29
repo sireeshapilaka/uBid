@@ -270,15 +270,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 }
 
 void NetworkAgent::submitBid(int ueId, AppBWRes* rpi, double budget) {
-
-    if (rpi != NULL) {
-        bool sameStartTime = (rpi->getActivityType() == "RealtimeVideo" ? true : false);
-        resourceManager.ReserveResourcesFake(rpi->getUlBandwidth(), rpi->getDlBandwidth(), rpi->getUlDuration(), rpi->getDlDuration(),
-                sameStartTime, simTime(), rpi->getActivityType());
-        //TODO: not negotiating
-        // rpis.push_back(appBwRes);
-    }
-
     rpi->setBidAmount(budget);
     rpi->setUser(ueId);
     // Modify RPI to include budget
