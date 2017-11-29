@@ -337,22 +337,23 @@ void ResourceManager::ReserveResources(double *uplinkBandwidth, double *downlink
         std::map<SimTime,double>::iterator countIter;
 
         int i = 0;
-        for (SimTime t = SimTime(startTime); t < SimTime(startTime + uplinkDuration); t = t + SimTime(1)  ) {
-            iter = resrcAllocMap->find(t);
+        while (i < uplinkDuration) {
+            simtime_t tmpTime = startTime+1 + i;
+            iter = resrcAllocMap->find(tmpTime);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, uplinkBandwidth[i]));
+                resrcAllocMap->insert(std::pair<SimTime,double>(tmpTime, uplinkBandwidth[i]));
             } else {
                 iter->second = iter->second + uplinkBandwidth[i];
             }
 
-            countIter = resrcAllocCountMap->find(t);
+            countIter = resrcAllocCountMap->find(tmpTime);
             if (countIter == resrcAllocCountMap->end()){
-                resrcAllocCountMap->insert(std::pair<SimTime,double>(t,1));
+                resrcAllocCountMap->insert(std::pair<SimTime,double>(tmpTime,1));
             } else {
                 countIter->second = countIter->second + 1;
             }
             i++;
-       }
+        }
     }
 
     if (downlinkDuration > 0) {
@@ -364,24 +365,25 @@ void ResourceManager::ReserveResources(double *uplinkBandwidth, double *downlink
 
         std::map<SimTime,double>::iterator iter;
         std::map<SimTime,double>::iterator countIter;
-        int realStartTime;
+        int realStartTime = 0;
         if ((uplinkDuration > 0 && startSameTime) || uplinkDuration <= 0) {
             realStartTime = startTime.dbl();
-        } else if (uplinkDuration > 0 && !startSameTime) {
-            realStartTime = startTime.dbl() + uplinkDuration;
+        } else if (uplinkDuration > 0 && !startSameTime){
+            throw cRuntimeError("Unrecognized flow type");
         }
         int i = 0;
-        for (SimTime t = SimTime(realStartTime); t < SimTime(realStartTime + downlinkDuration); t = t + SimTime(1)  ) {
-            iter = resrcAllocMap->find(t);
+        while (i < downlinkDuration) {
+            simtime_t tmpTime = startTime+1 + i;
+            iter = resrcAllocMap->find(tmpTime);
             if (iter == resrcAllocMap->end()){
-                resrcAllocMap->insert(std::pair<SimTime,double>(t, downlinkBandwidth[i]));
+                resrcAllocMap->insert(std::pair<SimTime,double>(tmpTime, downlinkBandwidth[i]));
             } else {
                 iter->second = iter->second + downlinkBandwidth[i];
             }
 
-            countIter = resrcAllocCountMap->find(t);
+            countIter = resrcAllocCountMap->find(tmpTime);
             if (countIter == resrcAllocCountMap->end()){
-                resrcAllocCountMap->insert(std::pair<SimTime,double>(t,1));
+                resrcAllocCountMap->insert(std::pair<SimTime,double>(tmpTime,1));
             } else {
                 countIter->second = countIter->second + 1;
             }
@@ -560,24 +562,27 @@ double ResourceManager::computePeakLoadOnGivenCellDuringGivenDuration(int cell, 
         resrcAllocMapList = dlCellRsrcAllocMapList;
     }
     CellResourceAllocMap* resrcAllocMap = resrcAllocMapList->front(); // MADHU: since there is only 1 tower in our configuration
-    std::map<SimTime,double>::iterator itlow = resrcAllocMap->lower_bound(startTime);
-    auto itup =  resrcAllocMap->upper_bound(endTime);
+ //   std::map<SimTime,double>::iterator itlow = resrcAllocMap->lower_bound(startTime);
+  //  auto itup =  resrcAllocMap->upper_bound(endTime);
 
     double peakLoad = 0;
     /* compute the peak load during the interval [startTime, endTime) */
-    if (itlow != resrcAllocMap->end()) {
-        for (std::map<SimTime,double>::iterator it = itlow; it != itup; it++){
-
-            /* It may happen that last iteration contains an entry at end time and spans for next 5 seconds
-             * Since we are not interested in this allocation, ignore it */
-            if (it->first == endTime){
-                continue;
-            }
-
-            if (it->second > peakLoad){
-                peakLoad = it->second;
-            }
-        }
+//    if (itlow != resrcAllocMap->end()) {
+//        for (std::map<SimTime,double>::iterator it = itlow; it != itup; it++){
+//
+//            /* It may happen that last iteration contains an entry at end time and spans for next 5 seconds
+//             * Since we are not interested in this allocation, ignore it */
+//            if (it->first == endTime){
+//                continue;
+//            }
+//
+//            if (it->second > peakLoad){
+//                peakLoad = it->second;
+//            }
+//        }
+//    }
+    if (resrcAllocMap->find(startTime) != resrcAllocMap->end()) {
+        peakLoad = resrcAllocMap->at(startTime);
     }
     return peakLoad;
 }
@@ -605,6 +610,7 @@ NetworkLoadLevel ResourceManager::computeNwLoadLevelDuringRequestedAlloc(int cel
 }
 
 double* ResourceManager::getResourceAllocationBundle(int duration, string appType, double throughput, int direction) {
+    cout << "Generating resource allocation bundle" << endl;
     double* allocationThroughputs = new double[duration];
     double cellCapacity;
     if (direction == 0){ // Uplink
@@ -615,7 +621,7 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
 
     double* modesList;
     int modes;
-    if(appType=="RealTimeVideo") {
+    if(appType=="RealtimeVideo") {
         modesList = new double[4];
         modes = 4;
         modesList[0] = REALTIMEHD_HIGH;
@@ -643,7 +649,7 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
     }
 
     int startMode = 0;
-    while(startMode<modes) {
+    while(startMode < modes) {
         if (throughput>=modesList[startMode]) {
             startMode--;
             break;
@@ -655,6 +661,7 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
 
     simtime_t currentTime = simTime();
     int t = 0;
+    bool infeasible = false;
     while(t<duration) {
         simtime_t tmpTime = currentTime+1+t;
         double peakLoad = computePeakLoadOnGivenCellDuringGivenDuration(0, direction, tmpTime, tmpTime+1 );
@@ -668,15 +675,20 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
 
         if(currMode<modes)
             allocationThroughputs[t] = modesList[currMode];
-        else
-            allocationThroughputs[t] = 0;
-
+        else {
+            infeasible = true;
+            break;
+            // allocationThroughputs[t] = 0;
+        }
         t++;
     }
 
     delete [] modesList;
-    return allocationThroughputs;
-
+    if (infeasible) {
+        return NULL;
+    } else {
+        return allocationThroughputs;
+    }
 }
 
 bool ResourceManager::isResourceAllocationFeasible(double duration, double throughput, int direction) {

@@ -17,7 +17,7 @@
 Define_Module(NetworkAgent)
 NetworkAgent::NetworkAgent() {
     // Capacity in Kbps
-    resourceManager.AddTower(25000, 25000);
+    resourceManager.AddTower(totalUplinkCapacity, totalDownlinkCapacity);
 }
 
 NetworkAgent::~NetworkAgent() {
@@ -111,15 +111,14 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
         }
         ulCapConstraint.addTerms(ulCapacities, decisionVars, numOfBids);
         dlCapConstraint.addTerms(dlCapacities, decisionVars, numOfBids);
-
-        double availableUplinkCapacity = 25000;
+        int availableUplinkCapacity = totalUplinkCapacity;
+        int availableDownlinkCapacity = totalDownlinkCapacity;
         if (resourceManager.ulCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.ulCellRsrcAllocMapList->at(0)->end()) {
-            availableUplinkCapacity -= resourceManager.ulCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
+            availableUplinkCapacity = totalUplinkCapacity - resourceManager.ulCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
         }
 
-        double availableDownlinkCapacity = 25000;
         if (resourceManager.dlCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.dlCellRsrcAllocMapList->at(0)->end()) {
-            availableUplinkCapacity -= resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
+            availableUplinkCapacity = totalDownlinkCapacity - resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
         }
 
         model.addConstr(dlCapConstraint, GRB_LESS_EQUAL, availableDownlinkCapacity, "Capacity");
@@ -175,7 +174,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
-        scheduleAt((simtime_t)simTime() + 1, msg);
+        scheduleAt((simtime_t)simTime() + 3, msg);
         return;
     }
 
@@ -239,6 +238,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             if (bidOfInterest->getActivityType() == "RealtimeVideo") {
                 startSameTime = true;
             }
+            cout << "App Type: " << bidOfInterest->getActivityType() << endl;
             resourceManager.ReserveResources(bidOfInterest->getUlBandwidth(), bidOfInterest->getDlBandwidth(),
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
             // Find the corresponding UE and notify
@@ -265,7 +265,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     delete [] pricesToCharge;
 
     // Schedule next auction event
-    timeOfNextAuction = (simtime_t)currentTime + 3;
+    timeOfNextAuction = (simtime_t)currentTime + 1;
     scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 
@@ -291,13 +291,13 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
 
     delete appBwReq;
 
-    AppBWRes* appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
-    appBwRes->setActivityType(activityType);
+    AppBWRes* appBwRes = NULL;
+    if (dlBandwidth != NULL && (activityType!="RealtimeVideo" || (activityType=="RealtimeVideo" && ulBandwidth != NULL))) {
+        appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
+        appBwRes->setActivityType(activityType);
+    }
 
     if (appBwRes != NULL) {
-        bool sameStartTime = (appBwRes->getActivityType() == "RealtimeVideo" ? true : false);
-        resourceManager.ReserveResourcesFake(appBwRes->getUlBandwidth(), appBwRes->getDlBandwidth(), appBwRes->getUlDuration(), appBwRes->getDlDuration(),
-                sameStartTime, simTime(), activityType);
         rpis.push_back(appBwRes);
     }
     return rpis;

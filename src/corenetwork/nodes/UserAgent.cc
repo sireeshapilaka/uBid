@@ -128,35 +128,11 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
     askingDlDuration = 0;
 
     if (appType == "Browser" || appType == "TCP") { // Browser or TCP  - basically file download/upload
-        // Do not negotiate for Bursty Trafficl; Just send a bid
-        if (downlinkSize > 0 && desiredDurationDownlink == 0) {
-            desiredDurationDownlink = ceil((downlinkSize*8.0)/1000000.0); //Desired duration @ rate of 1Mbps
-        }
-        askingDlDuration = desiredDurationDownlink;
-        if (uplinkSize > 0 && desiredDurationUplink == 0) {
-            desiredDurationUplink = ceil((uplinkSize*8.0)/75000.0);// Desired duration uplink @ rate of 75Kbps
-        }
-        askingUlDuration = desiredDurationUplink;
-        double bidAmount = intuniform(rng, 1, budget);
-        rpiUplinkDuration = desiredDurationUplink;
-        rpiDownlinkDuration = desiredDurationDownlink;
-        AppBWRes* rpi = new AppBWRes();
-        rpi->setActivityType(appType);
-        // Duration specified in seconds
-        rpi->setDlDuration(desiredDurationDownlink);
-        rpi->setUlDuration(desiredDurationUplink);
-        // Bandwidth specified in Kbps
-        double *dlBw = new double[desiredDurationDownlink];
-        double *ulBw = new double[desiredDurationUplink];
-        for(int i=0; i<desiredDurationDownlink; i++) {
-            dlBw[i] = 1000;
-        }
-        for(int i=0; i<desiredDurationUplink; i++) {
-            ulBw[i] = 75;
-        }
-        rpi->setDlBandwidth(dlBw);
-        rpi->setUlBandwidth(ulBw);
-        submitBid(rpi, bidAmount);
+        // MADHU: we currentlt Do not handle bursty traffic
+        AppAccessResponse* response = new AppAccessResponse();
+        response->setStatus(false);
+        response->setActivityType(ongoingActivity);
+        this->containingUe->processUAResponse(response);
     } else {
         // Pick a mode at random based on activity type
         if(appType=="RealtimeVideo") {
