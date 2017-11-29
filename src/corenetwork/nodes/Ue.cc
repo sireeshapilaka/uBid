@@ -188,8 +188,8 @@ void Ue::processUAResponse(cMessage* message) {
 
        // Absolutely none of these ar ebeing used to influence actual activity flows.
         // They are merely here for knowing what we were guaranteed
-        double uplinkThroughput = appAccessResponse->getGrantedUplinkThroughput();
-        double downlinkThroughput = appAccessResponse->getGrantedDownlinkThroughput();
+        double *uplinkThroughput = appAccessResponse->getGrantedUplinkThroughput();
+        double *downlinkThroughput = appAccessResponse->getGrantedDownlinkThroughput();
         double uplinkDuration = appAccessResponse->getGrantedUplinkDuration();
         double downlinkDuration = appAccessResponse->getGrantedDownlinkDuration();
         double uplinkBytes = appAccessResponse->getGrantedUplinkBytes();

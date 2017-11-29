@@ -25,8 +25,8 @@ private:
     bool status = false;
     double grantedDownlinkBytes= 0;
     double grantedUplinkBytes = 0;
-    double grantedDownlinkThroughput = 0;
-    double grantedUplinkThroughput = 0;
+    double* grantedDownlinkThroughput = NULL;
+    double* grantedUplinkThroughput = NULL;
     double grantedUplinkDuration = 0.0;
     double grantedDownlinkDuration = 0.0;
     string activityType;
@@ -48,10 +48,10 @@ public:
     void setGrantedUplinkDuration(double grantedUplinkDurationBytes);
 
 
-    double getGrantedUplinkThroughput() const;
-    void setGrantedUplinkThroughput(double grantedUplinkThroughput);
-    double getGrantedDownlinkThroughput() const;
-    void setGrantedDownlinkThroughput(double grantedDownlinkThroughput);
+    double* getGrantedUplinkThroughput() const;
+    void setGrantedUplinkThroughput(double* grantedUplinkThroughput);
+    double* getGrantedDownlinkThroughput() const;
+    void setGrantedDownlinkThroughput(double* grantedDownlinkThroughput);
 };
 
 #endif /* DAO_APPACCESSRESPONSE_H_ */

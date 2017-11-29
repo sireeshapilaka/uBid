@@ -74,18 +74,18 @@ string AppAccessResponse::getActivityType() {
     return this->activityType;
 }
 
-double AppAccessResponse::getGrantedUplinkThroughput() const {
+double* AppAccessResponse::getGrantedUplinkThroughput() const {
     return grantedUplinkThroughput;
 }
 
-void AppAccessResponse::setGrantedUplinkThroughput(double grantedUplinkThroughput) {
+void AppAccessResponse::setGrantedUplinkThroughput(double *grantedUplinkThroughput) {
     this->grantedUplinkThroughput = grantedUplinkThroughput;
 }
 
-double AppAccessResponse::getGrantedDownlinkThroughput() const {
+double* AppAccessResponse::getGrantedDownlinkThroughput() const {
     return grantedDownlinkThroughput;
 }
 
-void AppAccessResponse::setGrantedDownlinkThroughput(double grantedDownlinkThroughput) {
+void AppAccessResponse::setGrantedDownlinkThroughput(double *grantedDownlinkThroughput) {
     this->grantedDownlinkThroughput = grantedDownlinkThroughput;
 }

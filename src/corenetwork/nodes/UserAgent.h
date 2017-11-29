@@ -53,8 +53,8 @@ private:
 
     unsigned int rpiDownlinkBytes = 0;
     unsigned int rpiUplinkBytes = 0;
-    double rpiDownlinkThroughput = 0;
-    double rpiUplinkThroughput = 0;
+    double *rpiDownlinkThroughput = NULL;
+    double *rpiUplinkThroughput = NULL;
     int rpiDownlinkDuration = 0;
     int rpiUplinkDuration = 0;
     double moneySpentAggregate = 0;
