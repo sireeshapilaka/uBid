@@ -26,7 +26,6 @@ UserAgent::~UserAgent() {
 
 // TODO: POLICY!: Currently: Always bid on the highest RPI
 void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
-    EV_DEBUG << "Received RPI response" << endl;
     bool bidding = true;
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
@@ -160,7 +159,7 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         submitBid(rpi, bidAmount);
     } else {
         // Pick a mode at random based on activity type
-        if(appType=="RealTimeVideo") {
+        if(appType=="RealtimeVideo") {
             int mode = intuniform(rng, 1, 4);
             switch (mode) {
                 case 1:

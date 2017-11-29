@@ -291,7 +291,7 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     string activityType = appBwReq->getActivityType();
     int ulDuration = 0;
     double *ulBandwidth = NULL;
-    if(activityType=="RealtimeVideo" || activityType=="TCP" || activityType=="Browser") {
+    if(activityType=="RealtimeVideo") {
         ulDuration = appBwReq->getUlDuration();
         ulBandwidth = resourceManager.getResourceAllocationBundle(ulDuration, activityType, appBwReq->getUlBandwidth(), 0);
     }
