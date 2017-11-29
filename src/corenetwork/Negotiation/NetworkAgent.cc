@@ -174,7 +174,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
-        scheduleAt((simtime_t)simTime() + 3, msg);
+        scheduleAt((simtime_t)simTime() + 1, msg);
         return;
     }
 
@@ -260,6 +260,9 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
     cout << "Bids:" << totalNumBids <<  " Winners: " << numWinners << endl;
 
+    if (totalNumBids > 0 && numWinners == 0) {
+        throw cRuntimeError("No winners were chosen when bids were present!");
+    }
     //Free arrays
     delete [] decisions;
     delete [] pricesToCharge;
