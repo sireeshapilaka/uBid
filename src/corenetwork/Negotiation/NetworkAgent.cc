@@ -188,7 +188,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     list<AppBWRes*>::iterator iter = bidsForNextAuction.begin();
     int i = 0;
     double* pricesToCharge = new double[numOfBids];
-
     while(iter !=bidsForNextAuction.end()) {
         AppBWRes* bidOfInterest = *iter;
         bool decision = (decisions[i] == 1 ? true : false);
@@ -226,18 +225,20 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
     iter = bidsForNextAuction.begin();
     i = 0;
+    int numWinners = 0;
+    int totalNumBids = bidsForNextAuction.size();
     while (iter != bidsForNextAuction.end()) {
         AppBWRes* bidOfInterest = *iter;
         BidResponse* bidResponse = new BidResponse();
         bool decision = (decisions[i] == 1 ? true : false);
         cout << "Decision for bid " << i << " is: " << decisions[i] << "("<<pricesToCharge[i]<< ")"<< endl;
         if (decision) {
+            numWinners++;
             // Get corresponding bid
             bool startSameTime = false;
             if (bidOfInterest->getActivityType() == "RealtimeVideo") {
                 startSameTime = true;
             }
-
             resourceManager.ReserveResources(bidOfInterest->getUlBandwidth(), bidOfInterest->getDlBandwidth(),
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
             // Find the corresponding UE and notify
@@ -256,6 +257,8 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         i++;
         bidsForNextAuction.erase(iter++);
     }
+
+    cout << "Bids:" << totalNumBids <<  " Winners: " << numWinners << endl;
 
     //Free arrays
     delete [] decisions;
