@@ -207,6 +207,7 @@ double UserAgent::getUtility(AppBWRes* rpi) {
     // Ignoring uplink
     double phisum = 0;
     int duration = rpi->getDlDuration();
+    if (duration==0) return 0;
     int i;
     string app = rpi->getActivityType();
     double phi_asked = calcPhiApp(app, askingDownlinkThroughput);
