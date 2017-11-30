@@ -118,11 +118,11 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
         }
 
         if (resourceManager.dlCellRsrcAllocMapList->at(0)->find(correspondingSimtime) != resourceManager.dlCellRsrcAllocMapList->at(0)->end()) {
-            availableUplinkCapacity = totalDownlinkCapacity - resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
+            availableDownlinkCapacity = totalDownlinkCapacity - resourceManager.dlCellRsrcAllocMapList->at(0)->at(correspondingSimtime);
         }
 
-        model.addConstr(dlCapConstraint, GRB_LESS_EQUAL, availableDownlinkCapacity, "Capacity");
-        model.addConstr(ulCapConstraint, GRB_LESS_EQUAL, availableUplinkCapacity, "Capacity");
+        model.addConstr(dlCapConstraint, GRB_LESS_EQUAL, availableDownlinkCapacity, "CapacityDL");
+        model.addConstr(ulCapConstraint, GRB_LESS_EQUAL, availableUplinkCapacity, "CapacityUL");
     }
 
     model.optimize();
@@ -238,7 +238,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             if (bidOfInterest->getActivityType() == "RealtimeVideo") {
                 startSameTime = true;
             }
-            cout << "App Type: " << bidOfInterest->getActivityType() << endl;
             resourceManager.ReserveResources(bidOfInterest->getUlBandwidth(), bidOfInterest->getDlBandwidth(),
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
             // Find the corresponding UE and notify
@@ -257,8 +256,6 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         i++;
         bidsForNextAuction.erase(iter++);
     }
-
-    cout << "Bids:" << totalNumBids <<  " Winners: " << numWinners << endl;
 
     if (totalNumBids > 0 && numWinners == 0) {
         throw cRuntimeError("No winners were chosen when bids were present!");
@@ -285,7 +282,7 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     string activityType = appBwReq->getActivityType();
     int ulDuration = 0;
     double *ulBandwidth = NULL;
-    if(activityType=="RealtimeVideo") {
+    if (activityType=="RealtimeVideo") {
         ulDuration = appBwReq->getUlDuration();
         ulBandwidth = resourceManager.getResourceAllocationBundle(ulDuration, activityType, appBwReq->getUlBandwidth(), 0);
     }
@@ -295,7 +292,7 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     delete appBwReq;
 
     AppBWRes* appBwRes = NULL;
-    if (dlBandwidth != NULL && (activityType!="RealtimeVideo" || (activityType=="RealtimeVideo" && ulBandwidth != NULL))) {
+    if (dlBandwidth != NULL || (activityType=="RealtimeVideo" && ulBandwidth != NULL && dlDuration == 0)) {
         appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
         appBwRes->setActivityType(activityType);
     }

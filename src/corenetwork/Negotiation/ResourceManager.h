@@ -91,25 +91,16 @@ public:
     CellResourceAllocMap* downlinkAudioMap = new CellResourceAllocMap();
     CellAllocationsCountMap* dlAudioCount = new CellAllocationsCountMap();
 
-    void ReserveResourcesFake(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration,
-            bool startSameTime, simtime_t startTime, string activityType);
-
     void ReserveResources(double *uplinkBandwidth, double *downlinkBandwidth, int uplinkDuration, int downlinkDuration, bool startSameTime, simtime_t startTime);
-    double computePeakLoadOnGivenCellDuringGivenDuration(int cell, int direction, simtime_t startTime, simtime_t endTime);
+    double computePeakLoadOnGivenCellDuringGivenDuration(int cell, int direction, simtime_t timeSlot);
 
     // end private
     ResourceManager();
     virtual ~ResourceManager();
     int getNumTowers();
-    NetworkLoadLevel computeNwLoadLevelDuringRequestedAlloc( int cell, double bwDemand, int direction, simtime_t startTime, simtime_t endTime);
     void AddTower(double ulCapacity, double dlCapacity);
     void clearElapsedEntries();
-//    void ReserveResources(BidCandidate* winningBid);
-//    bool isResourceAllocationFeasible(BidCandidate* bidCandidate);
-//    simtime_t getResourceReleaseTime(BidCandidate *winningBid);
-//    double getProjectedCapacity(BidComponent *bidComponent);
     void recordStats();
-    bool isResourceAllocationFeasible(double duration, double throughput, int direction);
     double* getResourceAllocationBundle(int duration, string appType, double throughput, int direction);
 };
 
