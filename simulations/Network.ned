@@ -17,6 +17,7 @@ package ubid.simulations;
 
 import ubid.corenetwork.Negotiation.Negotiator;
 import ubid.corenetwork.nodes.Ue;
+import ubid.corenetwork.nodes.UeMC;
 
 network Network
 {
@@ -25,4 +26,5 @@ network Network
     submodules:
     	networkAgent: Negotiator {}
     	ue[50]: Ue {}
+    	ueMC[1] : UeMC {}
 }

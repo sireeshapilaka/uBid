@@ -40,6 +40,8 @@ OBJS = \
     $O/corenetwork/Negotiation/NetworkAgent.o \
     $O/corenetwork/Negotiation/ResourceManager.o \
     $O/corenetwork/nodes/Ue.o \
+    $O/corenetwork/nodes/UeMC.o \
+    $O/corenetwork/nodes/UserAgentMC.o \
     $O/corenetwork/nodes/UserAgent.o \
     $O/dao/AppBwRes.o \
     $O/dao/BidResponse.o \
@@ -186,11 +188,40 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	util/ModeConstants.h \
 	util/StrUtils.h \
 	util/UaUtils.h
+$O/corenetwork/nodes/UeMC.o: corenetwork/nodes/UeMC.cc \
+	corenetwork/Negotiation/NetworkAgent.h \
+	corenetwork/Negotiation/ResourceManager.h \
+	corenetwork/nodes/Ue.h \
+	corenetwork/nodes/UeMC.h \
+	corenetwork/nodes/UserAgent.h \
+	corenetwork/nodes/UserAgentMC.h \
+	dao/ActivityDAO.h \
+	dao/AppAccessResponse.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h \
+	dao/BidResponse.h \
+	util/ModeConstants.h \
+	util/StrUtils.h \
+	util/UaUtils.h
 $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
 	corenetwork/nodes/Ue.h \
 	corenetwork/nodes/UserAgent.h \
+	dao/ActivityDAO.h \
+	dao/AppAccessResponse.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h \
+	dao/BidResponse.h \
+	util/ModeConstants.h \
+	util/StrUtils.h \
+	util/UaUtils.h
+$O/corenetwork/nodes/UserAgentMC.o: corenetwork/nodes/UserAgentMC.cc \
+	corenetwork/Negotiation/NetworkAgent.h \
+	corenetwork/Negotiation/ResourceManager.h \
+	corenetwork/nodes/Ue.h \
+	corenetwork/nodes/UserAgent.h \
+	corenetwork/nodes/UserAgentMC.h \
 	dao/ActivityDAO.h \
 	dao/AppAccessResponse.h \
 	dao/AppBwReq.h \

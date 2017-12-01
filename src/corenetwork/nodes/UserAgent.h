@@ -35,17 +35,26 @@ class UserAgent {
 public:
     UserAgent(Ue* ue, double budgetPerSession);
     virtual ~UserAgent();
-    void getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink);
+    virtual void getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink);
     void handleBidRejection();
-    void handleRPIResponse(list<AppBWRes*> rpis);
-    void handleBidResponse(BidResponse* bidResult);
+    virtual void handleRPIResponse(list<AppBWRes*> rpis);
+    virtual void handleBidResponse(BidResponse* bidResult);
     void submitBid(AppBWRes* rpi, double budget);
     double getUtility(AppBWRes* rpi);
 
 private:
-    Ue* containingUe;
     // Ongoing = currently under negotiation for
     double budget;
+    unsigned int rpiDownlinkBytes = 0;
+    unsigned int rpiUplinkBytes = 0;
+    double moneySpentAggregate = 0;
+    int myName = -1;
+    cRNG* rng = NULL;
+    double alpha = 0;
+
+protected:
+    Ue* containingUe;
+    NetworkAgent* networkAgent = NULL;
     string ongoingActivity;
     unsigned int askingDownlinkBytes = 0;
     unsigned int askingUplinkBytes = 0;
@@ -53,20 +62,10 @@ private:
     double askingUplinkThroughput = 0;
     int askingDlDuration = 0;
     int askingUlDuration = 0;
-
-    unsigned int rpiDownlinkBytes = 0;
-    unsigned int rpiUplinkBytes = 0;
     double *rpiDownlinkThroughput = NULL;
     double *rpiUplinkThroughput = NULL;
     int rpiDownlinkDuration = 0;
     int rpiUplinkDuration = 0;
-    double moneySpentAggregate = 0;
-
-    int myName = -1;
-    NetworkAgent* networkAgent = NULL;
-    cRNG* rng = NULL;
-
-    double alpha = 0;
 
 };
 

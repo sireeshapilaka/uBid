@@ -130,7 +130,7 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
     askingUplinkThroughput = 0.0;
     askingDownlinkThroughput = 0.0;
     askingDlDuration = 0;
-    askingDlDuration = 0;
+    askingUlDuration = 0;
 
     if (appType == "Browser" || appType == "TCP") { // Browser or TCP  - basically file download/upload
         // MADHU: we currentlt Do not handle bursty traffic

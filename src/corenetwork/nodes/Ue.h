@@ -53,15 +53,12 @@ protected:
   virtual void handleMessage(cMessage *msg) override;
   bool isAnyApplicationActive();
 private:
-  UserAgent* ua;
   string lastActiveAppType;
   int numTCPApps;
   string appTrafficFileName;
   string users[21];
   string dates[7];
   cRNG* rng;
-  std::multiset<ActivityDAO> activities;
-  cMessage* startActivity = new cMessage("StartActivity");
   bool tcpOn = false;
   bool udpOn = false;
   string myAddress;
@@ -76,6 +73,10 @@ private:
   int numRequestedBrowserSessions = 0;
   int numUDPSessions = 0;
   int numRequestedUDPSessions = 0;
+protected:
+  UserAgent* ua;
+  std::multiset<ActivityDAO> activities;
+  cMessage* startActivity = new cMessage("StartActivity");
 };
 
 #endif /* CORENETWORK_NODES_UE_H_ */
