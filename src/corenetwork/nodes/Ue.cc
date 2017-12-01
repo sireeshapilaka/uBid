@@ -195,8 +195,13 @@ void Ue::processUAResponse(cMessage* message) {
         double uplinkBytes = appAccessResponse->getGrantedUplinkBytes();
         double downlinkBytes = appAccessResponse->getGrantedDownlinkBytes();
 
+        if (activities.size() == 0) {
+            // We are done with all scheduled activities
+            return;
+        }
         set<ActivityDAO>::iterator iter = activities.begin();
         ActivityDAO activityToLaunch = (*iter);
+
         unsigned int downlink = ((8*activityToLaunch.getDownlink()) < activityToLaunch.getDownlink() ? UINT_MAX: 8*activityToLaunch.getDownlink());
         unsigned int uplink = ((8*activityToLaunch.getUplink()) < activityToLaunch.getUplink() ? UINT_MAX: 8*activityToLaunch.getUplink());
         activities.erase(iter);

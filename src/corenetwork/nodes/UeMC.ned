@@ -26,8 +26,8 @@ module UeMC
 		int userIndex = default(0);
 		int dateIndex = default(0);
 		bool negotiated = default(true);
-		string fileSubPath;
+		string fileSubPath = default(""); // VALUE MUST BE SET IN OMNETPP.INI
         //# Node specs
         string nodeType = "UE";  // DO NOT CHANGE
-        int budget;
+        int budget = default(10); // VALUE MUST BE SET IN OMNETPP.INI
 }
