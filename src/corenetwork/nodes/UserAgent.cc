@@ -205,25 +205,40 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
 double UserAgent::getUtility(AppBWRes* rpi) {
     // TODO: There should be jitter penalty
     // Ignoring uplink
-    double phisum = 0;
-    int duration = rpi->getDlDuration();
-    if (duration==0) return 0;
+    double dlphisum = 0;
+    double ulphisum = 0;
+    int dlduration = rpi->getDlDuration();
+    int ulduration = rpi->getUlDuration();
+    if (dlduration==0 && ulduration==0) return 0;
     int i;
     string app = rpi->getActivityType();
-    double phi_asked = calcPhiApp(app, askingDownlinkThroughput);
-    double timeFactor = 1/duration; //t_i is always 1 sec
+    double dl_phi_asked = calcPhiApp(app, askingDownlinkThroughput);
+    double ul_phi_asked = calcPhiApp(app, askingUplinkThroughput);
 
-    for(i=0; i<duration; i++) {
+    for(i=0; i<dlduration; i++) {
         double phi_given = calcPhiApp(app, rpi->getDlBandwidth(i));
-        double iTerm = phi_given/(1+phi_asked-phi_given);
-        phisum += iTerm;
+        double iTerm = phi_given/(1+dl_phi_asked-phi_given);
+        dlphisum += iTerm;
     }
+    if(dlduration!=0)
+        dlphisum = dlphisum/dlduration;
+    else
+        dlphisum = 0;
 
-    double timeInMin = ((double)duration)/60;
+    for(i=0; i<ulduration; i++) {
+        double phi_given = calcPhiApp(app, rpi->getUlBandwidth(i));
+        double iTerm = phi_given/(1+ul_phi_asked-phi_given);
+        ulphisum += iTerm;
+    }
+    if(ulduration!=0)
+        ulphisum = ulphisum/ulduration;
+    else
+        ulphisum = 0;
+
+    double timeInMin = ((double)dlduration+ulduration)/60;
     double a = 1-(this->alpha);
     double tTerm = (pow(timeInMin,a))/a;
-    //cout << timeInMin << ", "<< a << ", "<< tTerm << ", " << phisum << ", " << timeFactor << " >> ";
 
-    return tTerm*phisum*timeFactor;
+    return tTerm*(ulphisum + dlphisum);
 
 }
