@@ -14,13 +14,16 @@ UeMC::UeMC() {
     numOfAuctions = 3;
     AppBWReq* req = new AppBWReq(0,0,"RealtimeVideo", 5, 5, REALTIME_HIGH, REALTIME_HIGH);
     rpisPerDay.push_back(req);
-    startTimes[0] = 4;
+    startTimes[0] = 3;
     req = new AppBWReq(0,0, "RealtimeVideo", 5, 5, REALTIME_LOW, REALTIME_LOW);
     rpisPerDay.push_back(req);
     startTimes[1] = 10;
     req = new AppBWReq(0,0, "Video", 0, 5, 0, VIDEO_STD);
     rpisPerDay.push_back(req);
-    startTimes[2] = 20;
+    startTimes[2] = 63;
+    req = new AppBWReq(0,0, "Video", 0, 5, 0, VIDEO_STD);
+    rpisPerDay.push_back(req);
+    startTimes[3] = 70;
 }
 
 UeMC::~UeMC() {
@@ -45,7 +48,7 @@ void UeMC::initialize() {
         vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
         for(auction=0;auction<numOfAuctions;auction++) {
             // Our day is 2 min long
-            int startTime = day*120+startTimes[auction] ;
+            int startTime = day*dayInSecs+startTimes[auction] ;
             ActivityDAO newActivity(startTime, 10, 10, (*iter)->getActivityType());
             activities.insert(newActivity);
             iter++;

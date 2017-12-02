@@ -19,7 +19,7 @@ UserAgentMC::~UserAgentMC() {
 }
 
 void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink) {
-    cout << "MC user negotiating for " << appType << endl;
+    cout << "MC user negotiating for " << appType << " at " << simTime()<<endl;
     if (this->networkAgent == NULL) {
         networkAgent = dynamic_cast<NetworkAgent*>(this->containingUe->getParentModule()->getSubmodule("networkAgent"));
         if (networkAgent == NULL) {
@@ -52,7 +52,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         } else {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
         }
-        cout << "Bidding for "<< rpiDownlinkThroughput << endl;
+        cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
         double bidAmount = computeBid();
         submitBid(rpis.front(), bidAmount);

@@ -20,6 +20,7 @@ protected:
     virtual void initialize() override;
 
 private:
+    const int dayInSecs = 120;
     int dailybudget = 10;
     vector<AppBWReq*> rpisPerDay;
     int numOfAuctions = 3;
