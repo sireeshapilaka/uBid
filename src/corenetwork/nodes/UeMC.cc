@@ -11,7 +11,7 @@ Define_Module(UeMC);
 
 UeMC::UeMC() {
     //Asking rpis - Hardcoding them
-    numOfAuctions = 3;
+    numOfAuctions = 4;
     AppBWReq* req = new AppBWReq(0,0,"RealtimeVideo", 5, 5, REALTIME_HIGH, REALTIME_HIGH);
     rpisPerDay.push_back(req);
     startTimes[0] = 3;

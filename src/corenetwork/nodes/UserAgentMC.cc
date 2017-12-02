@@ -44,6 +44,8 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
 
+        ongoingActivity = rpiOfInterest->getActivityType();
+
         if (ongoingActivity == "Video" || ongoingActivity == "Audio") {
             rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
         } else if (ongoingActivity == "RealtimeVideo") {
