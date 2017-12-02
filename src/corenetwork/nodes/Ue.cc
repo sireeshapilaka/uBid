@@ -74,6 +74,7 @@ void Ue::initialize() {
 
     int userId = par("userIndex").longValue();
     int dateId = par("dateIndex").longValue();
+    cout << "User" << this->getIndex() << endl;
 
     string filePath = this->appTrafficFileName + users[userId] + "/" + dates[dateId] + "/";
 
@@ -174,6 +175,7 @@ void Ue::scheduleNextActivity() {
 
 // User has launched an application. Send the appropriate request to the UA -- No application should be active at this point
 void Ue::startNextActivity() {
+    if(activities.size()==0) return;
     set<ActivityDAO>::iterator iter = activities.begin();
     ActivityDAO activityToLaunch = (*iter);
     // TODO: provide desired duration for uplink and downlink

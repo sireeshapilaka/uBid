@@ -39,7 +39,7 @@ public:
     void handleBidRejection();
     virtual void handleRPIResponse(list<AppBWRes*> rpis);
     virtual void handleBidResponse(BidResponse* bidResult);
-    void submitBid(AppBWRes* rpi, double budget);
+    virtual void submitBid(AppBWRes* rpi, double budget);
     double getUtility(AppBWRes* rpi);
 
 private:
@@ -48,7 +48,6 @@ private:
     unsigned int rpiDownlinkBytes = 0;
     unsigned int rpiUplinkBytes = 0;
     double moneySpentAggregate = 0;
-    int myName = -1;
     cRNG* rng = NULL;
     double alpha = 0;
 
@@ -66,6 +65,7 @@ protected:
     double *rpiUplinkThroughput = NULL;
     int rpiDownlinkDuration = 0;
     int rpiUplinkDuration = 0;
+    int myName = -1;
 
 };
 

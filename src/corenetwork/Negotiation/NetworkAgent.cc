@@ -248,7 +248,12 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             bidResponse->setBidResult(false);
         }
 
-        Ue* ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule("ue", bidOfInterest->getUser()));
+        int userId = bidOfInterest->getUser();
+        Ue* ueOfInterest = NULL;
+        if(userId<50000)
+            ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule("ue", userId));
+        else
+            ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule("ueMC", userId-50000));
         if (ueOfInterest == NULL) {
             throw cRuntimeError("UE could not be found!");
         }

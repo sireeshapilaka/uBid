@@ -15,11 +15,15 @@ class UeMC: public Ue {
 public:
     UeMC();
     virtual ~UeMC();
+    int getDailybudget();
 protected:
     virtual void initialize() override;
 
 private:
-    int budget = 10;
+    int dailybudget = 10;
+    vector<AppBWReq*> rpisPerDay;
+    int numOfAuctions = 3;
+    int* startTimes = new int[numOfAuctions];
 };
 
 #endif /* CORENETWORK_NODES_UEMC_H_ */

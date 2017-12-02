@@ -20,6 +20,7 @@ INCLUDE_PATH = \
     -I. \
     -Icorenetwork \
     -Icorenetwork/Negotiation \
+    -Icorenetwork/mcutils \
     -Icorenetwork/nodes \
     -Idao \
     -Iutil
@@ -39,6 +40,9 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/corenetwork/Negotiation/NetworkAgent.o \
     $O/corenetwork/Negotiation/ResourceManager.o \
+    $O/corenetwork/mcutils/State.o \
+    $O/corenetwork/mcutils/StateActionPair.o \
+    $O/corenetwork/mcutils/MCevent.o \
     $O/corenetwork/nodes/Ue.o \
     $O/corenetwork/nodes/UeMC.o \
     $O/corenetwork/nodes/UserAgentMC.o \
@@ -148,6 +152,7 @@ clean:
 	$(Q)-rm -f ./*_m.cc ./*_m.h ./*_sm.cc ./*_sm.h
 	$(Q)-rm -f corenetwork/*_m.cc corenetwork/*_m.h corenetwork/*_sm.cc corenetwork/*_sm.h
 	$(Q)-rm -f corenetwork/Negotiation/*_m.cc corenetwork/Negotiation/*_m.h corenetwork/Negotiation/*_sm.cc corenetwork/Negotiation/*_sm.h
+	$(Q)-rm -f corenetwork/mcutils/*_m.cc corenetwork/mcutils/*_m.h corenetwork/mcutils/*_sm.cc corenetwork/mcutils/*_sm.h
 	$(Q)-rm -f corenetwork/nodes/*_m.cc corenetwork/nodes/*_m.h corenetwork/nodes/*_sm.cc corenetwork/nodes/*_sm.h
 	$(Q)-rm -f dao/*_m.cc dao/*_m.h dao/*_sm.cc dao/*_sm.h
 	$(Q)-rm -f util/*_m.cc util/*_m.h util/*_sm.cc util/*_sm.h
@@ -157,7 +162,7 @@ cleanall: clean
 
 depend:
 	$(qecho) Creating dependencies...
-	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc corenetwork/*.cc corenetwork/Negotiation/*.cc corenetwork/nodes/*.cc dao/*.cc util/*.cc
+	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc corenetwork/*.cc corenetwork/Negotiation/*.cc corenetwork/mcutils/*.cc corenetwork/nodes/*.cc dao/*.cc util/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.cc \
@@ -174,6 +179,17 @@ $O/corenetwork/Negotiation/NetworkAgent.o: corenetwork/Negotiation/NetworkAgent.
 $O/corenetwork/Negotiation/ResourceManager.o: corenetwork/Negotiation/ResourceManager.cc \
 	corenetwork/Negotiation/ResourceManager.h \
 	util/ModeConstants.h
+$O/corenetwork/mcutils/MCevent.o: corenetwork/mcutils/MCevent.cc \
+	corenetwork/mcutils/MCevent.h \
+	dao/AppBwReq.h \
+	dao/AppBwRes.h
+$O/corenetwork/mcutils/State.o: corenetwork/mcutils/State.cc \
+	corenetwork/mcutils/State.h \
+	dao/AppBwReq.h
+$O/corenetwork/mcutils/StateActionPair.o: corenetwork/mcutils/StateActionPair.cc \
+	corenetwork/mcutils/State.h \
+	corenetwork/mcutils/StateActionPair.h \
+	dao/AppBwReq.h
 $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
@@ -191,6 +207,9 @@ $O/corenetwork/nodes/Ue.o: corenetwork/nodes/Ue.cc \
 $O/corenetwork/nodes/UeMC.o: corenetwork/nodes/UeMC.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
+	corenetwork/mcutils/MCevent.h \
+	corenetwork/mcutils/State.h \
+	corenetwork/mcutils/StateActionPair.h \
 	corenetwork/nodes/Ue.h \
 	corenetwork/nodes/UeMC.h \
 	corenetwork/nodes/UserAgent.h \
@@ -219,7 +238,11 @@ $O/corenetwork/nodes/UserAgent.o: corenetwork/nodes/UserAgent.cc \
 $O/corenetwork/nodes/UserAgentMC.o: corenetwork/nodes/UserAgentMC.cc \
 	corenetwork/Negotiation/NetworkAgent.h \
 	corenetwork/Negotiation/ResourceManager.h \
+	corenetwork/mcutils/MCevent.h \
+	corenetwork/mcutils/State.h \
+	corenetwork/mcutils/StateActionPair.h \
 	corenetwork/nodes/Ue.h \
+	corenetwork/nodes/UeMC.h \
 	corenetwork/nodes/UserAgent.h \
 	corenetwork/nodes/UserAgentMC.h \
 	dao/ActivityDAO.h \

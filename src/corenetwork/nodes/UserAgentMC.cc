@@ -7,9 +7,11 @@
 
 #include <UserAgentMC.h>
 
-UserAgentMC::UserAgentMC(Ue* containingUe) : UserAgent(containingUe, 1) {
-    // TODO Auto-generated constructor stub
-
+UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions) : UserAgent(containingUe, 1) {
+    this->rpisOfDay = rpisOfDay;
+    this->numAuctionsPerDay = numOfAuctions;
+    brem = ((UeMC* )(this->containingUe))->getDailybudget();
+    currentAuction = 0;
 }
 
 UserAgentMC::~UserAgentMC() {
@@ -17,6 +19,7 @@ UserAgentMC::~UserAgentMC() {
 }
 
 void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink) {
+    cout << "MC user negotiating for " << appType << endl;
     if (this->networkAgent == NULL) {
         networkAgent = dynamic_cast<NetworkAgent*>(this->containingUe->getParentModule()->getSubmodule("networkAgent"));
         if (networkAgent == NULL) {
@@ -24,35 +27,20 @@ void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, u
         }
     }
 
-    ongoingActivity = appType;
-    // Initializing to 0
-    askingUplinkThroughput = 0.0;
-    askingDownlinkThroughput = 0.0;
-    askingDlDuration = 0;
-    askingUlDuration = 0;
-
-    // Hardcoding values
-    if(appType == "RealtimeVideo") {
-        askingDownlinkThroughput = REALTIME_HIGH;
-        askingUplinkThroughput = REALTIME_HIGH;
-        askingDlDuration = 5;
-        askingUlDuration = 5;
-    } else if(appType == "Video") {
-        askingDownlinkThroughput = VIDEO_HIGH;
-        askingDlDuration = 5;
-    } else {
-        // Don't handle any other type
-        AppAccessResponse* response = new AppAccessResponse();
-        response->setStatus(false);
-        response->setActivityType(ongoingActivity);
-        this->containingUe->processUAResponse(response);
-    }
+    // Get everything from Rpis list as per the num of auction
+    AppBWReq* rpiOfInterest = rpisOfDay[currentAuction];
+    ongoingActivity = rpiOfInterest->getActivityType();
+    askingDownlinkThroughput = rpiOfInterest->getDlBandwidth();
+    askingUplinkThroughput = rpiOfInterest->getUlBandwidth();
+    askingDlDuration = rpiOfInterest->getDlDuration();
+    askingUlDuration = rpiOfInterest->getUlDuration();
 
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }
 
 void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
+    cout << "MC user handle RPI response! "<< endl;
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
 
@@ -64,6 +52,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         } else {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
         }
+        cout << "Bidding for "<< rpiDownlinkThroughput << endl;
 
         double bidAmount = computeBid();
         submitBid(rpis.front(), bidAmount);
@@ -71,6 +60,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
         // Let the UE know this is infeasible
         handleBidRejection();
+        updateAuctionNum();
     }
     if (rpis.size() > 1) {
         throw cRuntimeError("There can be no more than 1 RPI in the list!");
@@ -79,9 +69,10 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
 
 void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
     if (bidResult->isBidResult()) {// Won the bid
-        //moneySpentAggregate += bidResult->getPayment();
-
         // TODO: Do something with the money!!
+        brem -=bidResult->getPayment();
+        cout << "MC user >>> bid win" << brem<< endl;
+        //moneySpentAggregate += bidResult->getPayment();
 
 
         // Inform the UE
@@ -102,11 +93,35 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         }
         this->containingUe->processUAResponse(response);
     } else {
+        cout << "MC user >> bid win - lost" << endl;
         handleBidRejection();
     }
+    updateAuctionNum();
 }
 
 double UserAgentMC::computeBid() {
     // TODO: implement this
     return 5;
+}
+
+void UserAgentMC::submitBid(AppBWRes* rpi, double budget) {
+    EV_DEBUG << "Submitting bid with budget " << to_string((int)budget) << endl;
+    if (myName < 0) {
+        myName = this->containingUe->getIndex() + 50000;
+        EV_DEBUG << "Index " << myName << endl;
+        if (myName < 0) {
+            throw cRuntimeError("UE Name cannot be empty");
+        }
+    }
+    networkAgent->submitBid(myName, rpi, budget);
+}
+
+void UserAgentMC::updateAuctionNum() {
+    currentAuction++;
+    if(currentAuction==numAuctionsPerDay) {
+
+        // End of day
+        brem = ((UeMC* )(this->containingUe))->getDailybudget();
+        currentAuction = 0;
+    }
 }
