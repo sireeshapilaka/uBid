@@ -205,7 +205,6 @@ void Ue::processUAResponse(cMessage* message) {
 
         unsigned int downlink = ((8*activityToLaunch.getDownlink()) < activityToLaunch.getDownlink() ? UINT_MAX: 8*activityToLaunch.getDownlink());
         unsigned int uplink = ((8*activityToLaunch.getUplink()) < activityToLaunch.getUplink() ? UINT_MAX: 8*activityToLaunch.getUplink());
-        activities.erase(iter);
         if (activityType == "Browser" || activityType == "TCP") {
             EV_DEBUG << "Starting Browser Activity for Uplink: " << uplink << " And Downlink " << downlink << endl;
             numBrowserSessions++;
