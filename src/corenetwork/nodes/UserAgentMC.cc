@@ -36,6 +36,7 @@ void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, u
     askingUlDuration = rpiOfInterest->getUlDuration();
 
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
+    currentEvent = new MCevent(new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }
 
@@ -57,6 +58,11 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
         double bidAmount = computeBid();
+        if(currentEvent!=NULL) {
+            currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
+                    rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), getUtility(rpiOfInterest));
+            currentEvent->updateBidValue(bidAmount);
+        }
         submitBid(rpis.front(), bidAmount);
 
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
@@ -74,8 +80,8 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         // TODO: Do something with the money!!
         brem -=bidResult->getPayment();
         cout << "MC user >>> bid win" << brem<< endl;
-        //moneySpentAggregate += bidResult->getPayment();
-
+        if(currentEvent!=NULL)
+            currentEvent->updateCp(bidResult->getPayment());
 
         // Inform the UE
         AppAccessResponse* response = new AppAccessResponse();
@@ -102,8 +108,20 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
 }
 
 double UserAgentMC::computeBid() {
-    // TODO: implement this
-    return 5;
+    if (this->rng == NULL) {
+        rng = this->containingUe->getParentModule()->getRNG(0);
+        if (rng == NULL) {
+            throw cRuntimeError("No RNG found!");
+        }
+    }
+    int action = intuniform(rng, 1, epsilonInverse);
+    if(action==1) {
+        // Random action
+        return intuniform(rng, 0, brem);
+    } else {
+        // TODO: Optimal action
+        return 5;
+    }
 }
 
 void UserAgentMC::submitBid(AppBWRes* rpi, double budget) {
@@ -119,11 +137,85 @@ void UserAgentMC::submitBid(AppBWRes* rpi, double budget) {
 }
 
 void UserAgentMC::updateAuctionNum() {
+    if(currentEvent!=NULL) {
+        episodeLog.push_back(currentEvent);
+        /*
+        cout << "*****************" <<endl;
+        AppBWReq* ask = currentEvent->getAsk();
+        if(ask==NULL)
+            cout << "NULL ask" << endl;
+        else
+            cout << "Logged " << ask->getActivityType() << " (" <<ask->getDlBandwidth()
+            << ", " << ask->getUlBandwidth() << ") - "
+            << currentEvent->getBid() << ", " <<currentEvent->getCp() << endl;
+            */
+    }
     currentAuction++;
     if(currentAuction==numAuctionsPerDay) {
-
+        qTableUpdate();
         // End of day
         brem = ((UeMC* )(this->containingUe))->getDailybudget();
         currentAuction = 0;
+    }
+}
+
+void UserAgentMC::qTableUpdate() {
+    int numOfEvents = episodeLog.size();
+    cout << "End of day update for "<<numOfEvents << " events"<<endl;
+    int i;
+    double rt = 0;
+    for (i = numOfEvents-1; i>=0; i--) {
+        MCevent* eve = episodeLog[i];
+        AppBWRes* res = eve->getRes();
+        AppBWReq* req = eve->getAsk();
+        int ulDuration = 0;
+        int dlDuration = 0;
+        if(res!=NULL) {
+            res->getUlDuration();
+            res->getDlDuration();
+        }
+
+        // Compute delta for each auction
+        int* ulDelta = NULL;
+        int* dlDelta = NULL;
+        if(ulDuration!=0)
+            ulDelta = new int[ulDuration];
+        if(dlDuration!=0)
+            dlDelta = new int[dlDuration];
+        int j;
+
+        double askUl = req->getUlBandwidth();
+        double askDl = req->getDlBandwidth();
+        for(j=0; j<ulDuration; j++) {
+            ulDelta[j] = askUl - res->getUlBandwidth(j);
+        }
+        for(j=0; j<dlDuration; j++) {
+            dlDelta[j] = askDl - res->getDlBandwidth(j);
+        }
+
+        // Discounted reward
+        rt = eve->getUtility() + (gamma*rt);
+
+        // Create the key in the map
+        State* prevState = new State(eve->getBrem(), ulDelta, dlDelta);
+        StateActionPair* sa = new StateActionPair(prevState, eve->getBid());
+
+        auto search = qTable.find(sa);
+        if(search!=qTable.end()) {
+            // Key exists - Update
+            double val = search->second;
+            double newVal = val + learningRate*(rt-val);
+            qTable.at(sa) = newVal;
+        } else {
+            // New key
+            qTable.insert(make_pair(sa, rt));
+        }
+
+    }
+
+    // Empty the episode log
+    vector<MCevent*>::iterator iter = episodeLog.begin();
+    while(iter!=episodeLog.end()) {
+        episodeLog.erase(iter++);
     }
 }

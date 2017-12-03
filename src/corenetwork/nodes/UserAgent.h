@@ -48,7 +48,6 @@ private:
     unsigned int rpiDownlinkBytes = 0;
     unsigned int rpiUplinkBytes = 0;
     double moneySpentAggregate = 0;
-    cRNG* rng = NULL;
     double alpha = 0;
 
 protected:
@@ -66,6 +65,7 @@ protected:
     int rpiDownlinkDuration = 0;
     int rpiUplinkDuration = 0;
     int myName = -1;
+    cRNG* rng = NULL;
 
 };
 

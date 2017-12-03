@@ -22,6 +22,11 @@ private:
     vector<MCevent*> episodeLog;
     map<StateActionPair*, double> qTable;
     vector<AppBWReq*> rpisOfDay;
+    MCevent* currentEvent;
+    double gamma = 0.5;
+    double learningRate = 0.01;
+    double epsilonInverse = 4;
+    cRNG* epsilonRng;
 
 public:
     UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions);
@@ -33,6 +38,7 @@ public:
     void submitBid(AppBWRes* rpi, double budget) override;
     void handleEndOfEpisode();
     void updateAuctionNum();
+    void qTableUpdate();
 };
 
 #endif /* CORENETWORK_NODES_USERAGENTMC_H_ */

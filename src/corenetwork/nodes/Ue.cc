@@ -74,7 +74,6 @@ void Ue::initialize() {
 
     int userId = par("userIndex").longValue();
     int dateId = par("dateIndex").longValue();
-    cout << "User" << this->getIndex() << endl;
 
     string filePath = this->appTrafficFileName + users[userId] + "/" + dates[dateId] + "/";
 
