@@ -139,7 +139,7 @@ void UserAgentMC::submitBid(AppBWRes* rpi, double budget) {
 void UserAgentMC::updateAuctionNum() {
     if(currentEvent!=NULL) {
         episodeLog.push_back(currentEvent);
-        /*
+
         cout << "*****************" <<endl;
         AppBWReq* ask = currentEvent->getAsk();
         if(ask==NULL)
@@ -147,8 +147,9 @@ void UserAgentMC::updateAuctionNum() {
         else
             cout << "Logged " << ask->getActivityType() << " (" <<ask->getDlBandwidth()
             << ", " << ask->getUlBandwidth() << ") - "
-            << currentEvent->getBid() << ", " <<currentEvent->getCp() << endl;
-            */
+            << currentEvent->getBid() << ", " <<currentEvent->getCp() << ", " << currentEvent->getUtility()<< endl;
+        cout << "*****************" << endl;
+
     }
     currentAuction++;
     if(currentAuction==numAuctionsPerDay) {
@@ -214,8 +215,6 @@ void UserAgentMC::qTableUpdate() {
     }
 
     // Empty the episode log
-    vector<MCevent*>::iterator iter = episodeLog.begin();
-    while(iter!=episodeLog.end()) {
-        episodeLog.erase(iter++);
-    }
+    episodeLog.clear();
+    cout << "MC events erased " << episodeLog.size() << endl;
 }

@@ -454,13 +454,12 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
     int startMode = 0;
     while(startMode < modes) {
         if (throughput>=modesList[startMode]) {
-            startMode--;
             break;
         }
         startMode++;
     }
-    if(startMode<0) startMode = 0;
     if(startMode>modes-1) startMode = modes-1;
+    if(startMode<0) startMode = 0;
 
     simtime_t currentTime = simTime();
     int t = 0;

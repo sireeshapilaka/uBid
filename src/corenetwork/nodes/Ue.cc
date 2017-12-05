@@ -178,8 +178,11 @@ void Ue::startNextActivity() {
     set<ActivityDAO>::iterator iter = activities.begin();
     ActivityDAO activityToLaunch = (*iter);
     // TODO: provide desired duration for uplink and downlink
-    ua->getReservedAccess(activityToLaunch.getActivityType(), activityToLaunch.getDownlink(), activityToLaunch.getUplink(), 0, 0);
+    string type = activityToLaunch.getActivityType();
+    unsigned int dl = activityToLaunch.getDownlink();
+    unsigned int ul = activityToLaunch.getUplink();
     activities.erase(activities.begin());
+    ua->getReservedAccess(type, dl, ul, 0, 0);
 }
 
 void Ue::processUAResponse(cMessage* message) {
