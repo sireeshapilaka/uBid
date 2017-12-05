@@ -479,6 +479,9 @@ double* ResourceManager::getResourceAllocationBundle(int duration, string appTyp
             allocationThroughputs[t] = modesList[currMode];
         else {
             infeasible = true;
+            if (t > 0) {
+                throw cRuntimeError("The projected availability decreases to 0 at some point in the future!");
+            }
             break;
             // allocationThroughputs[t] = 0;
         }
