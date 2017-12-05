@@ -168,6 +168,7 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
         if(bids.size()==0)
             return intuniform(rng, 1, brem);
 
+        cout << "MC user non-random bid" << endl;
         // Exactly one optimal action
         if(bids.size()==1)
             return bids[0];
@@ -227,8 +228,8 @@ void UserAgentMC::qTableUpdate() {
         int ulDuration = 0;
         int dlDuration = 0;
         if(res!=NULL) {
-            res->getUlDuration();
-            res->getDlDuration();
+            ulDuration = res->getUlDuration();
+            dlDuration = res->getDlDuration();
         }
 
         // Compute delta for each auction
