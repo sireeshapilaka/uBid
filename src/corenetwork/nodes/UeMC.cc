@@ -21,7 +21,7 @@ UeMC::UeMC() {
     req = new AppBWReq(0,0, "Video", 0, 5, 0, VIDEO_STD);
     rpisPerDay.push_back(req);
     startTimes[2] = 63;
-    req = new AppBWReq(0,0, "Video", 0, 5, 0, VIDEO_STD);
+    req = new AppBWReq(0,0, "Audio", 0, 5, 0, AUDIO_LOW);
     rpisPerDay.push_back(req);
     startTimes[3] = 70;
 }
@@ -43,7 +43,7 @@ void UeMC::initialize() {
 
     int day, auction;
 
-    for(day=0; day<10; day++) {
+    for(day=0; day<numOfDays; day++) {
         // Dummy uplink and downlink values since we are populating deterministic throughputs in UA
         vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
         for(auction=0;auction<numOfAuctions;auction++) {

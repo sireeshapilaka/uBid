@@ -16,3 +16,16 @@ StateActionPair::~StateActionPair() {
     // TODO Auto-generated destructor stub
 }
 
+bool StateActionPair::isState(State* s) {
+    return state->isEqual(s);
+}
+
+int StateActionPair::getAction() {
+    return bid;
+}
+
+bool StateActionPair::isEqual(StateActionPair* s) {
+    if(s->bid != this->bid) return false;
+    return state->isEqual(s->state);
+}
+

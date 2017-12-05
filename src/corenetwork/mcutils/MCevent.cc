@@ -53,6 +53,8 @@ int MCevent::getCp() {
 }
 
 double MCevent::getUtility() {
+    // If auction lost, the value is 0
+    if(cp==-1) return 0;
     return utility;
 }
 

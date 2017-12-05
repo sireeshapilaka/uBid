@@ -57,7 +57,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         }
         cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
-        double bidAmount = computeBid();
+        double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
         if(currentEvent!=NULL) {
             currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
                     rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), getUtility(rpiOfInterest));
@@ -77,9 +77,9 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
 
 void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
     if (bidResult->isBidResult()) {// Won the bid
-        // TODO: Do something with the money!!
         brem -=bidResult->getPayment();
-        cout << "MC user >>> bid win" << brem<< endl;
+
+        cout << "MC user >>> bid win " << brem<< endl;
         if(currentEvent!=NULL)
             currentEvent->updateCp(bidResult->getPayment());
 
@@ -107,20 +107,75 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
     updateAuctionNum();
 }
 
-double UserAgentMC::computeBid() {
+double UserAgentMC::computeBid(double* dl, double* ul) {
     if (this->rng == NULL) {
         rng = this->containingUe->getParentModule()->getRNG(0);
         if (rng == NULL) {
             throw cRuntimeError("No RNG found!");
         }
     }
-    int action = intuniform(rng, 1, epsilonInverse);
+
+    // Using a constant epsilon
+    // TODO: Change this to 1/n
+    if (this->epsilonRng == NULL) {
+        epsilonRng = this->containingUe->getParentModule()->getRNG(1);
+        if (epsilonRng == NULL)
+            throw cRuntimeError("No RNG (epsilon) found!");
+    }
+
+    int action = intuniform(epsilonRng, 1, epsilonInverse);
+    cout << "MC user action picked "<< action << endl;
     if(action==1) {
         // Random action
-        return intuniform(rng, 0, brem);
+        cout << "MC user placing random bid" << endl;
+        return intuniform(rng, 1, brem);
     } else {
-        // TODO: Optimal action
-        return 5;
+        // Optimal action
+        int* ulDelta;
+        int* dlDelta;
+        if(askingDlDuration!=0)
+            dlDelta = new int[askingDlDuration];
+        if(askingUlDuration!=0)
+            ulDelta = new int[askingUlDuration];
+        int i;
+        for(i=0; i<askingDlDuration; i++) {
+            dlDelta[i] = askingDownlinkThroughput-dl[i];
+        }
+        for(i=0; i<askingUlDuration; i++) {
+            ulDelta[i] = askingUplinkThroughput-ul[i];
+        }
+
+        State* s = new State(this->brem, ulDelta, dlDelta, askingUlDuration, askingDlDuration);
+        vector<int> bids;
+        double maxQ = 0;
+
+        map<StateActionPair*, double>::iterator iter;
+        for(iter=qTable.begin(); iter!=qTable.end(); iter++) {
+            StateActionPair* saOfInterest = iter->first;
+            double currentQ = iter->second;
+            // I get list of actions, if 1, choose.. If more, choose from them
+            if(saOfInterest->isState(s)) {
+                if(currentQ>maxQ) {
+                    bids.clear();
+                    bids.push_back(saOfInterest->getAction());
+                } else if(currentQ==maxQ) {
+                    bids.push_back(saOfInterest->getAction());
+                }
+            }
+        }
+
+        // No known optimal action, so picking random action
+        if(bids.size()==0)
+            return intuniform(rng, 1, brem);
+
+        // Exactly one optimal action
+        if(bids.size()==1)
+            return bids[0];
+
+        // Picking one of the optimal actions at random
+        int size = bids.size();
+        return bids[intuniform(rng, 0, size-1)];
+
     }
 }
 
@@ -198,7 +253,7 @@ void UserAgentMC::qTableUpdate() {
         rt = eve->getUtility() + (gamma*rt);
 
         // Create the key in the map
-        State* prevState = new State(eve->getBrem(), ulDelta, dlDelta);
+        State* prevState = new State(eve->getBrem(), ulDelta, dlDelta, ulDuration, dlDuration);
         StateActionPair* sa = new StateActionPair(prevState, eve->getBid());
 
         auto search = qTable.find(sa);

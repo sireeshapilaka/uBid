@@ -17,6 +17,9 @@ private:
 public:
     StateActionPair(State* state, int bid);
     virtual ~StateActionPair();
+    bool isState(State* s);
+    int getAction();
+    bool isEqual(StateActionPair* s);
 };
 
 #endif /* DAO_STATEACTIONPAIR_H_ */
