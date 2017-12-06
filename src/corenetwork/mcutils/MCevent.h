@@ -19,9 +19,9 @@ private:
     int cp = -1; // -1 indicates auction lost
     double utility = 0;
     int brem = 0;
+    int eveIndex;
 public:
-    MCevent(AppBWReq* rpi_ask, AppBWRes* rpi_res, int bid, int cp);
-    MCevent(AppBWReq* rpi_ask, int brem);
+    MCevent(int eveIndex, AppBWReq* rpi_ask, int brem);
     virtual ~MCevent();
     void setRes(AppBWRes* res, double u);
     void updateBidValue(int bid);
@@ -32,6 +32,7 @@ public:
     int getCp();
     double getUtility();
     int getBrem();
+    int getIndex();
 };
 
 #endif /* DAO_MCEVENT_H_ */

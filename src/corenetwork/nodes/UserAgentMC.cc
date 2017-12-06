@@ -8,8 +8,16 @@
 #include <UserAgentMC.h>
 
 UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions) : UserAgent(containingUe, 1) {
-    this->rpisOfDay = rpisOfDay;
-    this->numAuctionsPerDay = numOfAuctions;
+    int i;
+    // Only realtime flows allowed
+    for(i=0; i< numOfAuctions; i++) {
+        AppBWReq* r = rpisOfDay[i];
+        if(r->getActivityType()=="RealtimeVideo") {
+            this->rpisOfDay.push_back(r);
+            this->numAuctionsPerDay++;
+        }
+    }
+
     brem = ((UeMC* )(this->containingUe))->getDailybudget();
     currentAuction = 0;
 }
@@ -26,6 +34,13 @@ void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, u
             throw cRuntimeError("Network Agent Module not found!");
         }
     }
+    // If no budget left, don't start anything
+    if(brem==0){
+        currentEvent = NULL;
+        handleBidRejection();
+        updateAuctionNum();
+    }
+
 
     // Get everything from Rpis list as per the num of auction
     AppBWReq* rpiOfInterest = rpisOfDay[currentAuction];
@@ -36,7 +51,7 @@ void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, u
     askingUlDuration = rpiOfInterest->getUlDuration();
 
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
-    currentEvent = new MCevent(new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
+    currentEvent = new MCevent(currentAuction, new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }
 
@@ -115,51 +130,65 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
         }
     }
 
-    // Using a constant epsilon
-    // TODO: Change this to 1/n
     if (this->epsilonRng == NULL) {
         epsilonRng = this->containingUe->getParentModule()->getRNG(1);
         if (epsilonRng == NULL)
             throw cRuntimeError("No RNG (epsilon) found!");
     }
 
-    int action = intuniform(epsilonRng, 1, epsilonInverse);
-    cout << "MC user action picked "<< action << endl;
+    int* ulDelta;
+    int* dlDelta;
+    if(askingDlDuration!=0)
+        dlDelta = new int[askingDlDuration];
+    if(askingUlDuration!=0)
+        ulDelta = new int[askingUlDuration];
+    int i;
+    for(i=0; i<askingDlDuration; i++) {
+        dlDelta[i] = askingDownlinkThroughput-dl[i];
+    }
+    for(i=0; i<askingUlDuration; i++) {
+        ulDelta[i] = askingUplinkThroughput-ul[i];
+    }
+
+    int action;
+
+    State* state = new State(currentAuction, this->brem, ulDelta, dlDelta, askingUlDuration, askingDlDuration);
+    bool isStatePresent = false;
+    auto stateSearched = statesVisited.find(state);
+    if(stateSearched!=statesVisited.end()) {
+        // State exists
+        state = stateSearched->first;
+        epsilonInverse = stateSearched->second + 1;
+        action = intuniform(epsilonRng, 1, epsilonInverse);
+        isStatePresent = true;
+    } else {
+        // New state
+        action = 1;
+    }
+
     if(action==1) {
         // Random action
-        cout << "MC user placing random bid" << endl;
         return intuniform(rng, 1, brem);
     } else {
         // Optimal action
-        int* ulDelta;
-        int* dlDelta;
-        if(askingDlDuration!=0)
-            dlDelta = new int[askingDlDuration];
-        if(askingUlDuration!=0)
-            ulDelta = new int[askingUlDuration];
-        int i;
-        for(i=0; i<askingDlDuration; i++) {
-            dlDelta[i] = askingDownlinkThroughput-dl[i];
-        }
-        for(i=0; i<askingUlDuration; i++) {
-            ulDelta[i] = askingUplinkThroughput-ul[i];
-        }
 
-        State* s = new State(this->brem, ulDelta, dlDelta, askingUlDuration, askingDlDuration);
         vector<int> bids;
         double maxQ = 0;
 
-        map<StateActionPair*, double>::iterator iter;
-        for(iter=qTable.begin(); iter!=qTable.end(); iter++) {
-            StateActionPair* saOfInterest = iter->first;
-            double currentQ = iter->second;
-            // I get list of actions, if 1, choose.. If more, choose from them
-            if(saOfInterest->isState(s)) {
-                if(currentQ>maxQ) {
-                    bids.clear();
-                    bids.push_back(saOfInterest->getAction());
-                } else if(currentQ==maxQ) {
-                    bids.push_back(saOfInterest->getAction());
+        if(isStatePresent) {
+            // Iterate over the possible bids
+            for(i=1; i<=brem; i++) {
+            	// Check for the state action pair in the map
+                StateActionPair* saOfInterest = new StateActionPair(state, i);
+                auto searchSa = qTable.find(saOfInterest);
+                if(searchSa!=qTable.end()) {
+                    double currentQ = searchSa->second;
+                    if(currentQ>maxQ) {
+                        bids.clear();
+                        bids.push_back(i);
+                    } else if(currentQ==maxQ) {
+                        bids.push_back(i);
+                    }
                 }
             }
         }
@@ -251,15 +280,28 @@ void UserAgentMC::qTableUpdate() {
         }
 
         // Discounted reward
-        rt = eve->getUtility() + (gamma*rt);
+        rt = eve->getUtility() + (rewardsDiscountRate*rt);
 
-        // Create the key in the map
-        State* prevState = new State(eve->getBrem(), ulDelta, dlDelta, ulDuration, dlDuration);
+        // State visit update and use the same state for the sa pair as well
+        State* prevState = new State(eve->getIndex(), eve->getBrem(), ulDelta, dlDelta, ulDuration, dlDuration);
+        auto stateSearched = statesVisited.find(prevState);
+        if(stateSearched!=statesVisited.end()) {
+            // Exists
+            prevState = stateSearched->first;
+            int num = stateSearched->second;
+            statesVisited.at(prevState) = num+1;
+        } else {
+            // New state
+            statesVisited.insert(make_pair(prevState, 1));
+        }
+
+        // Create the key for the qTable map
         StateActionPair* sa = new StateActionPair(prevState, eve->getBid());
 
         auto search = qTable.find(sa);
         if(search!=qTable.end()) {
             // Key exists - Update
+            sa = search->first;
             double val = search->second;
             double newVal = val + learningRate*(rt-val);
             qTable.at(sa) = newVal;

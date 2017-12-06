@@ -7,14 +7,8 @@
 
 #include <MCevent.h>
 
-MCevent::MCevent(AppBWReq* rpi_ask, AppBWRes* rpi_res, int bid, int cp) {
-    this->rpi_ask = rpi_ask;
-    this->rpi_res = rpi_res;
-    this->bid = bid;
-    this->cp = cp;
-}
-
-MCevent::MCevent(AppBWReq* rpi_ask, int brem) {
+MCevent::MCevent(int eveIndex, AppBWReq* rpi_ask, int brem) {
+    this->eveIndex = eveIndex;
     this->rpi_ask = rpi_ask;
     this->brem = brem;
 }
@@ -60,4 +54,8 @@ double MCevent::getUtility() {
 
 int MCevent::getBrem() {
     return brem;
+}
+
+int MCevent::getIndex() {
+    return eveIndex;
 }

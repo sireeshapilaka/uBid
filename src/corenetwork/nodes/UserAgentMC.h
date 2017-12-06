@@ -21,16 +21,23 @@ private:
     int numAuctionsPerDay = 0;
     int currentAuction = 0;
     vector<MCevent*> episodeLog;
-    struct comp {
+    struct saPairComp {
         bool operator() (StateActionPair* sa1, StateActionPair* sa2) const {
-            return sa1->isEqual(sa2);
+            return sa1->isLess(sa2);
         }
     };
+    map<StateActionPair*, double, saPairComp> qTable;
 
-    map<StateActionPair*, double, comp> qTable;
+    struct stateComp {
+        bool operator() (State* s1, State* s2) const {
+            return s1->isLess(s2);
+        }
+    };
+    map<State*, int, stateComp> statesVisited;
+
     vector<AppBWReq*> rpisOfDay;
     MCevent* currentEvent;
-    double gamma = 0.5;
+    double rewardsDiscountRate = 0.5;
     double learningRate = 0.01;
     double epsilonInverse = 4;
     cRNG* epsilonRng = NULL;

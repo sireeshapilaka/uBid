@@ -20,14 +20,12 @@ private:
     // Other Properties
     int ulSize = 0;
     int dlSize = 0;
-    int numTimes = 0;
-    AppBWReq* ask;
     int index = 0;
 
 public:
-    State(int brem, int* ulDelta, int* dlDelta, int ulSize, int dlSize);
+    State(int index, int brem, int* ulDelta, int* dlDelta, int ulSize, int dlSize);
     virtual ~State();
-    bool isEqual(State* s);
+    bool isLess(State* s);
 };
 
 #endif /* CORENETWORK_MCUTILS_STATE_H_ */

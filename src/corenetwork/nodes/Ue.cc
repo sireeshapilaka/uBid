@@ -182,7 +182,10 @@ void Ue::startNextActivity() {
     unsigned int dl = activityToLaunch.getDownlink();
     unsigned int ul = activityToLaunch.getUplink();
     activities.erase(activities.begin());
-    ua->getReservedAccess(type, dl, ul, 0, 0);
+
+    // Start only for realtime
+    if(type=="RealtimeVideo")
+        ua->getReservedAccess(type, dl, ul, 0, 0);
 }
 
 void Ue::processUAResponse(cMessage* message) {
