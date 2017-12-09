@@ -27,6 +27,9 @@ const double REALTIME_HIGH = 800;
 const double REALTIMEHD_LOW = 1200;
 const double REALTIMEHD_HIGH = 1600;
 
+const int dayLen = 120;
+const int days = 10000;
+
 
 
 #endif /* UTIL_MODECONSTANTS_H_ */

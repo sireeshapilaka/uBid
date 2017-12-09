@@ -20,13 +20,10 @@ protected:
     virtual void initialize() override;
 
 private:
-    const int dayInSecs = 120;
-    const int numOfDays = 10000;
+    const int dayLength = dayLen;
+    const int numOfDays = days;
     int dailybudget = 10;
 
-    vector<AppBWReq*> rpisPerDay;
-    int numOfAuctions = 4;
-    int* startTimes = new int[numOfAuctions];
 };
 
 #endif /* CORENETWORK_NODES_UEMC_H_ */

@@ -68,17 +68,16 @@ Ue::~Ue() {
 
 void Ue::initialize() {
     int budgetPerSession = par("budget").longValue();
-    ua = new UserAgent(this, (double)budgetPerSession);
     // Read in the App Traffic Model file and schedule the appropriate traffic events
     this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
 
     int userId = par("userIndex").longValue();
-    int dateId = par("dateIndex").longValue();
-
-    string filePath = this->appTrafficFileName + users[userId] + "/" + dates[dateId] + "/";
+    string filePath = this->appTrafficFileName + users[userId] + "/";
 
     EV_DEBUG << "File is " << filePath << endl;
-    string files[] = {filePath + "Audio.config", filePath + "Video.config", filePath+"RealtimeVideo.config", filePath + "Browser.config", filePath + "TCP.config"};
+    // Dealing with only RealtimeVideo
+    string files[] = {filePath+"RealtimeVideo.config"};
+    //string files[] = {filePath + "Audio.config", filePath + "Video.config", filePath+"RealtimeVideo.config", filePath + "Browser.config", filePath + "TCP.config"};
     std::ifstream scriptfilestream;
     int numAc = 0;
     for (int i = 0; i < 5; i++) {
@@ -90,7 +89,7 @@ void Ue::initialize() {
             throw cRuntimeError("Could not open script file %s", fileName.c_str());
        int timepart;
        std::string line;
-       unsigned int pos, downlink, uplink;
+       unsigned int pos, downlink, uplink, dlDuration, ulDuration;
        simtime_t t;
        int currentSimulationTime = simTime().dbl();
        while (!std::getline(scriptfilestream, line).eof()) {
@@ -106,9 +105,19 @@ void Ue::initialize() {
            }
            int oldPos = pos;
            pos = line.find(",", pos+1);
-           downlink = stoi(line.substr(oldPos + 1, pos));
-           uplink = stoi(line.substr(pos+1, line.size()-1));
-           timepart = (timepart%1200);
+           uplink = stoi(line.substr(oldPos + 1, pos));
+           oldPos = pos;
+           pos = line.find(",", pos+1);
+           ulDuration = stoi(line.substr(oldPos+1, pos));
+           oldPos = pos;
+           pos = line.find(",", pos+1);
+           downlink = stoi(line.substr(oldPos+1, pos));
+           dlDuration = stoi(line.substr(pos+1, line.size()-1));
+           timepart = (timepart%dayLen);
+
+           rpisPerDay.push_back(new AppBWReq(0, 0, activityType, ulDuration, dlDuration, uplink, downlink));
+           startTimes.push_back(timepart);
+           /*
            if (activityType == "Audio" || activityType == "Video") { // TCP Video or Audio Flows
                if (downlink <= 1500) { // whats the point in streaming if its not atleast 1500 bytes
                    continue;
@@ -119,13 +128,29 @@ void Ue::initialize() {
                }
            }
            t = (simtime_t)timepart;
+           */
 
-           ActivityDAO newActivity(timepart, uplink, downlink, activityType);
-           activities.insert(newActivity);
            numAc++;
        }
        scriptfilestream.close();
+       numOfAuctions = numAc++;
     }
+
+    int day, auction;
+    ua = new UserAgent(this, (double)budgetPerSession, rpisPerDay, numOfAuctions);
+
+    for(day=0; day<days; day++) {
+        // Dummy uplink and downlink values since we are populating deterministic throughputs in UA
+        vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
+        for(auction=0;auction<numOfAuctions;auction++) {
+            // Our day is 2 min long
+            int startTime = day*dayLen+startTimes[auction] ;
+            ActivityDAO newActivity(startTime, 10, 10, (*iter)->getActivityType());
+            activities.insert(newActivity);
+            iter++;
+        }
+    }
+
     // Schedule a self-message for the first item in the set
     if (!activities.empty()) {
         ActivityDAO firstAc = *activities.begin();

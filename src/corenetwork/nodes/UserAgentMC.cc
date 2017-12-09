@@ -7,8 +7,9 @@
 
 #include <UserAgentMC.h>
 
-UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions) : UserAgent(containingUe, 1) {
+UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions) : UserAgent(containingUe, 1, rpisOfDay, numOfAuctions) {
     int i;
+    numOfAuctions = 0;
     // Only realtime flows allowed
     for(i=0; i< numOfAuctions; i++) {
         AppBWReq* r = rpisOfDay[i];

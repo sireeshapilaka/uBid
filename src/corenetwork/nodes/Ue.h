@@ -26,6 +26,7 @@
 #include <dao/BidResponse.h>
 #include <util/StrUtils.h>
 #include <util/ModeConstants.h>
+#include <dao/AppBwReq.h>
 
 using namespace omnetpp;
 using namespace std;
@@ -55,7 +56,6 @@ protected:
 private:
   string lastActiveAppType;
   int numTCPApps;
-  string appTrafficFileName;
   string users[21];
   string dates[7];
   cRNG* rng;
@@ -77,6 +77,10 @@ protected:
   UserAgent* ua;
   std::multiset<ActivityDAO> activities;
   cMessage* startActivity = new cMessage("StartActivity");
+  string appTrafficFileName;
+  vector<AppBWReq*> rpisPerDay;
+  int numOfAuctions = 4;
+  vector<int> startTimes;
 };
 
 #endif /* CORENETWORK_NODES_UE_H_ */

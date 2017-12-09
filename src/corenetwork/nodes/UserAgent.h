@@ -33,7 +33,7 @@ using namespace uaUtils;
 
 class UserAgent {
 public:
-    UserAgent(Ue* ue, double budgetPerSession);
+    UserAgent(Ue* ue, double budgetPerSession, vector<AppBWReq*> rpis, int numOfAuctions);
     virtual ~UserAgent();
     virtual void getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink);
     void handleBidRejection();
@@ -66,6 +66,9 @@ protected:
     int rpiUplinkDuration = 0;
     int myName = -1;
     cRNG* rng = NULL;
+    vector<AppBWReq*> rpisOfDay;
+    int currentAuction = 0;
+    int numAuctionsPerDay = 0;
 
 };
 

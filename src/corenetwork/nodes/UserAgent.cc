@@ -15,10 +15,12 @@
 
 #include <UserAgent.h>
 
-UserAgent::UserAgent(Ue* containingUe, double budgetPerSession) {
+UserAgent::UserAgent(Ue* containingUe, double budgetPerSession, vector<AppBWReq*> rpis, int numOfAuctions) {
     this->containingUe = containingUe;
     this->budget = budgetPerSession;
     this->alpha = uaUtils::genAlpha();
+    this->rpisOfDay = rpis;
+    this->numAuctionsPerDay = numOfAuctions;
 }
 
 UserAgent::~UserAgent() {
@@ -116,6 +118,21 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
             throw cRuntimeError("Network Agent Module not found!");
         }
     }
+
+    AppBWReq* rpiOfInterest = rpisOfDay[currentAuction];
+    ongoingActivity = rpiOfInterest->getActivityType();
+    askingDownlinkThroughput = rpiOfInterest->getDlBandwidth();
+    askingUplinkThroughput = rpiOfInterest->getUlBandwidth();
+    askingDlDuration = rpiOfInterest->getDlDuration();
+    askingUlDuration = rpiOfInterest->getUlDuration();
+
+    if(currentAuction==numAuctionsPerDay)
+        currentAuction=0;
+    AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
+    handleRPIResponse(networkAgent->getRPIs(bwReq));
+
+
+    /*
     if (this->rng == NULL) {
         rng = this->containingUe->getParentModule()->getRNG(0);
         if (rng == NULL) {
@@ -200,6 +217,7 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         // Sent RPI request to the Network
         handleRPIResponse(networkAgent->getRPIs(bwReq));
     }
+    */
 }
 
 double UserAgent::getUtility(AppBWRes* rpi) {

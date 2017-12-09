@@ -18,8 +18,6 @@
 class UserAgentMC: public UserAgent {
 private:
     int brem = 0;
-    int numAuctionsPerDay = 0;
-    int currentAuction = 0;
     vector<MCevent*> episodeLog;
     struct saPairComp {
         bool operator() (StateActionPair* sa1, StateActionPair* sa2) const {
@@ -35,7 +33,6 @@ private:
     };
     map<State*, int, stateComp> statesVisited;
 
-    vector<AppBWReq*> rpisOfDay;
     MCevent* currentEvent;
     double rewardsDiscountRate = 0.5;
     double learningRate = 0.01;
