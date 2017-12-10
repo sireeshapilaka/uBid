@@ -20,9 +20,6 @@ public:
 protected:
     virtual void initialize() override;
 
-private:
-    int dailybudget = 10;
-
 };
 
 #endif /* CORENETWORK_NODES_UEMC_H_ */

@@ -13,10 +13,11 @@ UeMC::UeMC() {
 }
 
 int UeMC::getDailybudget() {
-    return dailybudget;
+    return totalBudget;
 }
 
 void UeMC::initialize() {
     Ue::initialize();
+    delete ua;
     ua = new UserAgentMC(this, rpisPerDay, numOfAuctions);
 }

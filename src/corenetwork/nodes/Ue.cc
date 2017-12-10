@@ -43,7 +43,10 @@ Ue::~Ue() {
 }
 
 void Ue::initialize() {
-    int budgetPerSession = par("budget").longValue();
+    totalBudget = par("budget").longValue();
+    if (totalBudget <= 0) {
+        throw cRuntimeError("User has budget <= 0!");
+    }
     // Populate rpis from the file
     int userId = par("userIndex").longValue();
     this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
@@ -85,14 +88,16 @@ void Ue::initialize() {
       startTimes.push_back(timepart);
       numAc++;
     }
+
     scriptfilestream.close();
     numOfAuctions = numAc;
 
+    double budgetPerSession = totalBudget/numOfAuctions; // Naive Budget distribution strategy by Non MC User;
     if (numOfAuctions <= 0) {
         throw cRuntimeError("This user wants nothing ever?");
     }
     int day, auction;
-    ua = new UserAgent(this, (double)budgetPerSession, rpisPerDay, numOfAuctions);
+    ua = new UserAgent(this, budgetPerSession, rpisPerDay, numOfAuctions);
 
     for(day=0; day<days; day++) {
        // Dummy uplink and downlink values since we are populating deterministic throughputs in UA

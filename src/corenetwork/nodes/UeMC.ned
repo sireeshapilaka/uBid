@@ -29,5 +29,5 @@ module UeMC
 		string fileSubPath = default(""); // VALUE MUST BE SET IN OMNETPP.INI
         //# Node specs
         string nodeType = "ueMC";  // DO NOT CHANGE
-        int budget = default(10); // VALUE MUST BE SET IN OMNETPP.INI
+        int budget; // VALUE MUST BE SET IN OMNETPP.INI
 }

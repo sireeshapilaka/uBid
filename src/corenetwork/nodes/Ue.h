@@ -49,7 +49,7 @@ public:
 
     int expectedDurationActivity = 0;
     string myType;
-
+    int totalBudget = -1;
 protected:
   virtual void initialize() override;
   virtual void handleMessage(cMessage *msg) override;
