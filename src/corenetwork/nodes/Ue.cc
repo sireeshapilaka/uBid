@@ -34,13 +34,13 @@ Ue::Ue() {
 }
 
 Ue::~Ue() {
-    if(!rpisPerDay.empty()) {
-        vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
-        while(iter!=rpisPerDay.end()) {
-            rpisPerDay.erase(iter++);
-        }
-    }
-    startTimes.clear();
+//    if(!rpisPerDay.empty()) {
+//        vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
+//        while(iter!=rpisPerDay.end()) {
+//            rpisPerDay.erase(iter++);
+//        }
+//    }
+//    startTimes.clear();
 }
 
 void Ue::initialize() {
