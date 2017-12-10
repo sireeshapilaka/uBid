@@ -26,8 +26,8 @@ module Ue
 		int userIndex = default(0);
 		int dateIndex = default(0);
 		bool negotiated = default(true);
-		string fileSubPath;
+		string fileSubPath = default("");
         //# Node specs
-        string nodeType = "UE";  // DO NOT CHANGE
+        string nodeType = "ue";  // DO NOT CHANGE
         int budget;
 }

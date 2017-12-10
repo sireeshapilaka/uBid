@@ -48,6 +48,7 @@ public:
     void sendRPIResponse(BidResponse* bidResponse);
 
     int expectedDurationActivity = 0;
+    string myType;
 
 protected:
   virtual void initialize() override;

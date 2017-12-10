@@ -247,13 +247,11 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             // Find the corresponding UE and notify
             bidResponse->setBidResult(false);
         }
-
         int userId = bidOfInterest->getUser();
-        Ue* ueOfInterest = NULL;
-        if(userId<50000)
-            ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule("ue", userId));
-        else
-            ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule("ueMC", userId-50000));
+        string userType = bidOfInterest->getUserType();
+        cout << "UE of interest is " << userType << " " << userId << endl;
+
+        Ue* ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule(userType.c_str(), userId));
         if (ueOfInterest == NULL) {
             throw cRuntimeError("UE could not be found!");
         }
@@ -274,9 +272,10 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 
-void NetworkAgent::submitBid(int ueId, AppBWRes* rpi, double budget) {
+void NetworkAgent::submitBid(string userType, int ueId, AppBWRes* rpi, double budget) {
     rpi->setBidAmount(budget);
     rpi->setUser(ueId);
+    rpi->setUserType(userType);
     // Modify RPI to include budget
     bidsForNextAuction.push_back(rpi);
 }
@@ -297,7 +296,7 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     delete appBwReq;
 
     AppBWRes* appBwRes = NULL;
-    if (dlBandwidth != NULL || (activityType=="RealtimeVideo" && ulBandwidth != NULL && dlDuration == 0)) {
+    if (dlBandwidth != NULL || (ulBandwidth != NULL && dlDuration == 0)) {
         appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
         appBwRes->setActivityType(activityType);
     }

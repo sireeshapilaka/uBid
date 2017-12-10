@@ -30,25 +30,24 @@ UserAgent::~UserAgent() {
 // TODO: POLICY!: Currently: Always bid on the highest RPI
 void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
     bool bidding = true;
+    if (this->rng == NULL) {
+        rng = this->containingUe->getParentModule()->getRNG(0);
+        if (rng == NULL) {
+            throw cRuntimeError("No RNG found!");
+        }
+    }
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
 
-        if (ongoingActivity == "Video" || ongoingActivity == "Audio") {
-            rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
-        } else if (ongoingActivity == "RealtimeVideo") {
-            rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
-            rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
-        } else {
-            throw cRuntimeError("Unrecognized App Type in handling RPI Response");
-        }
+        rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
+        rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
 
         if(rpiOfInterest!=NULL)
             cout << "Utility for user " << this->containingUe->getId() << " is: " << getUtility(rpiOfInterest) << endl;
 
-
         if (bidding) {
             // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
-            double bidAmount = intuniform(rng, 1, budget);;
+            double bidAmount = intuniform(rng, 1, budget);
             submitBid(rpis.front(), bidAmount);
         } else {
             delete rpis.front();
@@ -71,7 +70,7 @@ void UserAgent::submitBid(AppBWRes* rpi, double budget) {
             throw cRuntimeError("UE Name cannot be empty");
         }
     }
-    networkAgent->submitBid(myName, rpi, budget);
+    networkAgent->submitBid(this->containingUe->myType, myName, rpi, budget);
 }
 
 void UserAgent::handleBidResponse(BidResponse* bidResult) {
@@ -130,94 +129,6 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
         currentAuction=0;
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
-
-
-    /*
-    if (this->rng == NULL) {
-        rng = this->containingUe->getParentModule()->getRNG(0);
-        if (rng == NULL) {
-            throw cRuntimeError("No RNG found!");
-        }
-    }
-
-    ongoingActivity = appType;
-    askingDownlinkBytes = downlinkSize;
-    askingUplinkBytes = uplinkSize;
-    // Initializing to 0
-    askingUplinkThroughput = 0.0;
-    askingDownlinkThroughput = 0.0;
-    askingDlDuration = 0;
-    askingUlDuration = 0;
-
-    if (appType == "Browser" || appType == "TCP") { // Browser or TCP  - basically file download/upload
-        // MADHU: we currentlt Do not handle bursty traffic
-        AppAccessResponse* response = new AppAccessResponse();
-        response->setStatus(false);
-        response->setActivityType(ongoingActivity);
-        this->containingUe->processUAResponse(response);
-    } else {
-        // Pick a mode at random based on activity type
-        if(appType=="RealtimeVideo") {
-            int mode = intuniform(rng, 1, 4);
-            switch (mode) {
-                case 1:
-                    askingDownlinkThroughput = REALTIMEHD_HIGH;
-                    break;
-                case 2:
-                    askingDownlinkThroughput = REALTIMEHD_LOW;
-                    break;
-                case 3:
-                    askingDownlinkThroughput = REALTIME_HIGH;
-                    break;
-                default:
-                    askingDownlinkThroughput = REALTIME_LOW;
-                    break;
-            }
-            askingUplinkThroughput = askingDownlinkThroughput;
-        } else if(appType=="Audio") {
-            int mode = intuniform(rng, 1, 3);
-            switch (mode) {
-                case 1:
-                    askingDownlinkThroughput = AUDIO_HIGH;
-                    break;
-                case 2:
-                    askingDownlinkThroughput = AUDIO_STD;
-                    break;
-                default:
-                    askingDownlinkThroughput = AUDIO_LOW;
-                    break;
-            }
-            askingUplinkThroughput = 75;
-        } else if(appType=="Video") {
-            int mode = intuniform(rng, 1, 5);
-            switch (mode) {
-            case 1:
-                askingDownlinkThroughput = VIDEO_VHIGH;
-                break;
-            case 2:
-                askingDownlinkThroughput = VIDEO_HIGH;
-                break;
-            case 3:
-                askingDownlinkThroughput = VIDEO_STD;
-                break;
-            case 4:
-                askingDownlinkThroughput = VIDEO_MEDIUM;
-                break;
-            default:
-                askingDownlinkThroughput = VIDEO_LOW;
-                break;
-            }
-            askingUplinkThroughput = 75;
-        }
-        askingDlDuration = ceil(askingDownlinkBytes*8/(askingDownlinkThroughput*1000));
-        askingUlDuration = ceil(askingUplinkBytes*8/(askingUplinkThroughput*1000));
-        AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
-        //TODO: not negoitating
-        //networkAgent->getRPIs(bwReq);
-        // Sent RPI request to the Network
-        handleRPIResponse(networkAgent->getRPIs(bwReq));
-    }
-    */
 }
 
 double UserAgent::getUtility(AppBWRes* rpi) {

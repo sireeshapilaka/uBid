@@ -32,6 +32,7 @@ class AppBWRes: public cMessage {
     string activityType;
     double bidAmount = 0;
     int ueId;
+    string userType;
 public:
     AppBWRes();
     AppBWRes(int dlDuration, int ulDuration, double *dlBandwidth, double *ulBandwidth);
@@ -57,6 +58,9 @@ public:
 
     void setUser(int userName);
     int getUser();
+
+    void setUserType(string userType);
+    string getUserType();
 };
 
 #endif /* APPBWRES_H_ */

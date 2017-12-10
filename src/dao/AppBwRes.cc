@@ -100,3 +100,11 @@ void AppBWRes::setUser(int userName) {
 int AppBWRes::getUser() {
     return this->ueId;
 }
+
+void AppBWRes::setUserType(string userType) {
+    this->userType = userType;
+}
+
+string AppBWRes::getUserType() {
+    return this->userType;
+}

@@ -14,14 +14,13 @@
 class UeMC: public Ue {
 public:
     UeMC();
-    virtual ~UeMC();
+//    virtual ~UeMC();
     int getDailybudget();
+
 protected:
     virtual void initialize() override;
 
 private:
-    const int dayLength = dayLen;
-    const int numOfDays = days;
     int dailybudget = 10;
 
 };

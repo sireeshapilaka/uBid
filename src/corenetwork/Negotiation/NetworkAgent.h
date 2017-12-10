@@ -40,7 +40,7 @@ public:
     list<AppBWRes*> getRPIs(AppBWReq* appBwReq);
     void receiveBid(AppBWReq* appBwReq);
     virtual void initialize();
-    void submitBid(int ueId, AppBWRes* rpi, double budget);
+    void submitBid(string userType, int ueId, AppBWRes* rpi, double budget);
     double solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime_t currentTime);
     void handleMessage(cMessage* message);
     void finish();

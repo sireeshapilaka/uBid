@@ -213,13 +213,13 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
 void UserAgentMC::submitBid(AppBWRes* rpi, double budget) {
     EV_DEBUG << "Submitting bid with budget " << to_string((int)budget) << endl;
     if (myName < 0) {
-        myName = this->containingUe->getIndex() + 50000;
+        myName = this->containingUe->getIndex();
         EV_DEBUG << "Index " << myName << endl;
         if (myName < 0) {
             throw cRuntimeError("UE Name cannot be empty");
         }
     }
-    networkAgent->submitBid(myName, rpi, budget);
+    networkAgent->submitBid(this->containingUe->myType, myName, rpi, budget);
 }
 
 void UserAgentMC::updateAuctionNum() {

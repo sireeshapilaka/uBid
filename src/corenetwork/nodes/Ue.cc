@@ -30,139 +30,86 @@ void Ue::finish() {
 }
 
 Ue::Ue() {
-    users[0] = "9079826788";
-    users[1] = "9072329683";
-    users[2] = "9073153977";
-    users[3] = "9073542489";
-    users[4] = "9073543211";
-    users[5] = "9073543250";
-    users[6] = "9073543849";
-    users[7] = "9073546052";
-    users[8] = "9073546744";
-    users[9] = "9073552126";
-    users[10] = "9073552424";
-    users[11] = "9073554901";
-    users[12] = "9073555454";
-    users[13] = "9073558632";
-    users[14] = "9073559725";
-    users[15] = "9073559885";
-    users[16] = "9078630022";
-    users[17] = "9078630110";
-    users[18] = "9078632460";
-    users[19] = "9078633333";
-    users[20] = "9078638997";
-
-    dates[0] = "May4";
-    dates[1] = "Apr28";
-    dates[2] = "Apr29";
-    dates[3] = "Apr30";
-    dates[4] = "May1";
-    dates[5] = "May2";
-    dates[6] = "May3";
-    // TODO Auto-generated constructor stub
 }
 
 Ue::~Ue() {
-    // TODO Auto-generated destructor stub
+    if(!rpisPerDay.empty()) {
+        vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
+        while(iter!=rpisPerDay.end()) {
+            rpisPerDay.erase(iter++);
+        }
+    }
+    startTimes.clear();
 }
 
 void Ue::initialize() {
     int budgetPerSession = par("budget").longValue();
-    // Read in the App Traffic Model file and schedule the appropriate traffic events
-    this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
-
+    // Populate rpis from the file
     int userId = par("userIndex").longValue();
-    string filePath = this->appTrafficFileName + users[userId] + "/";
+    this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
+    string filePath = this->appTrafficFileName + to_string(userId)+ "/";
+    myType = par("nodeType").stringValue();
+    cout << "File is " << filePath << endl;
 
-    EV_DEBUG << "File is " << filePath << endl;
     // Dealing with only RealtimeVideo
-    string files[] = {filePath+"RealtimeVideo.config"};
-    //string files[] = {filePath + "Audio.config", filePath + "Video.config", filePath+"RealtimeVideo.config", filePath + "Browser.config", filePath + "TCP.config"};
+    string fileName = filePath+"RealtimeVideo.config";
     std::ifstream scriptfilestream;
     int numAc = 0;
-    for (int i = 0; i < 5; i++) {
-        // Scan each file and add their events to a set
-        string activityType = (i == 0 ? "Audio" : (i == 1 ? "Video" : (i == 2 ? "RealtimeVideo" : (i == 3 ? "Browser" : "TCP"))));
-        string fileName = files[i];
-        scriptfilestream.open(fileName);
-        if (!scriptfilestream.is_open())
-            throw cRuntimeError("Could not open script file %s", fileName.c_str());
-       int timepart;
-       std::string line;
-       unsigned int pos, downlink, uplink, dlDuration, ulDuration;
-       simtime_t t;
-       int currentSimulationTime = simTime().dbl();
-       while (!std::getline(scriptfilestream, line).eof()) {
-           line = trim(line);
-           if (line.find("#") == 0)
-               continue;
-           pos = line.find(",");
-           if (pos == -1)
-               continue;
-           timepart = stof(line.substr(0, pos));
-           if (currentSimulationTime > timepart) {
-               continue;
-           }
-           int oldPos = pos;
-           pos = line.find(",", pos+1);
-           uplink = stoi(line.substr(oldPos + 1, pos));
-           oldPos = pos;
-           pos = line.find(",", pos+1);
-           ulDuration = stoi(line.substr(oldPos+1, pos));
-           oldPos = pos;
-           pos = line.find(",", pos+1);
-           downlink = stoi(line.substr(oldPos+1, pos));
-           dlDuration = stoi(line.substr(pos+1, line.size()-1));
-           timepart = (timepart%dayLen);
+    string activityType = "RealtimeVideo";
+    // Every user has only one activity file
+    scriptfilestream.open(fileName);
+    if (!scriptfilestream.is_open())
+       throw cRuntimeError("Could not open script file %s", fileName.c_str());
+    int timepart;
+    std::string line;
+    unsigned int pos, downlink, uplink, dlDuration, ulDuration;
+    while (!std::getline(scriptfilestream, line).eof()) {
+      line = trim(line);
+      pos = line.find(",");
+      if (pos == -1)
+          continue;
+      timepart = stof(line.substr(0, pos));
+      int oldPos = pos;
+      pos = line.find(",", pos+1);
+      uplink = stoi(line.substr(oldPos + 1, pos));
+      oldPos = pos;
+      pos = line.find(",", pos+1);
+      ulDuration = stoi(line.substr(oldPos+1, pos));
+      oldPos = pos;
+      pos = line.find(",", pos+1);
+      downlink = stoi(line.substr(oldPos+1, pos));
+      dlDuration = stoi(line.substr(pos+1, line.size()-1));
+      timepart = (timepart%dayLen);
 
-           rpisPerDay.push_back(new AppBWReq(0, 0, activityType, ulDuration, dlDuration, uplink, downlink));
-           startTimes.push_back(timepart);
-           /*
-           if (activityType == "Audio" || activityType == "Video") { // TCP Video or Audio Flows
-               if (downlink <= 1500) { // whats the point in streaming if its not atleast 1500 bytes
-                   continue;
-               }
-           } else if (activityType == "RealtimeVideo") { // UDP Realtime Video
-               if (downlink <= 1500 && uplink <= 1500) { // Whats the point in streaming this
-                   continue;
-               }
-           }
-           t = (simtime_t)timepart;
-           */
-
-           numAc++;
-       }
-       scriptfilestream.close();
-       numOfAuctions = numAc++;
+      rpisPerDay.push_back(new AppBWReq(0, 0, activityType, ulDuration, dlDuration, uplink, downlink));
+      startTimes.push_back(timepart);
+      numAc++;
     }
+    scriptfilestream.close();
+    numOfAuctions = numAc;
 
+    if (numOfAuctions <= 0) {
+        throw cRuntimeError("This user wants nothing ever?");
+    }
     int day, auction;
     ua = new UserAgent(this, (double)budgetPerSession, rpisPerDay, numOfAuctions);
 
     for(day=0; day<days; day++) {
-        // Dummy uplink and downlink values since we are populating deterministic throughputs in UA
-        vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
-        for(auction=0;auction<numOfAuctions;auction++) {
-            // Our day is 2 min long
-            int startTime = day*dayLen+startTimes[auction] ;
-            ActivityDAO newActivity(startTime, 10, 10, (*iter)->getActivityType());
-            activities.insert(newActivity);
-            iter++;
-        }
+       // Dummy uplink and downlink values since we are populating deterministic throughputs in UA
+       vector<AppBWReq*>::iterator iter = rpisPerDay.begin();
+       for(auction=0;auction<numOfAuctions;auction++) {
+           // Our day is 2 min long
+           int startTime = day*dayLen+startTimes[auction] ;
+           ActivityDAO newActivity(startTime, 10, 10, (*iter)->getActivityType());
+           activities.insert(newActivity);
+           iter++;
+       }
     }
 
-    // Schedule a self-message for the first item in the set
-    if (!activities.empty()) {
-        ActivityDAO firstAc = *activities.begin();
-        int startTime = firstAc.getStartTimeInSeconds();
-        // Dont start anything immediately. Give setup a second
-        if (startTime < 2) {
-            startTime = 2;
-        }
-        scheduleAt((simtime_t)startTime, startActivity);
-    } else {
-        //throw cRuntimeError("No activities for UE!");
-    }
+    // Schedule 1st activity
+    ActivityDAO firstAc = *activities.begin();
+    int startTime = firstAc.getStartTimeInSeconds();
+    scheduleAt((simtime_t)startTime, startActivity);
 }
 
 void Ue::handleMessage(cMessage *msg) {
