@@ -21,6 +21,8 @@ UserAgent::UserAgent(Ue* containingUe, double budgetPerSession, vector<AppBWReq*
     this->alpha = uaUtils::genAlpha();
     this->rpisOfDay = rpis;
     this->numAuctionsPerDay = numOfAuctions;
+    this->totalDailyBudget = numOfAuctions*budgetPerSession;
+    this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget);
 }
 
 UserAgent::~UserAgent() {
@@ -42,15 +44,20 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
 
         double utility = getUtility(rpiOfInterest);
+        this->containingUe->utilityPerAuction.record(utility);
         if (utility >= utilityThreshold) {
             double trueValuation = utility*utilityScalingFactor;
-            double bidAmount = min(trueValuation, budget);
+            double bidAmount = min(trueValuation, budget + remainingBudgetFromLastAuction);
+            this->containingUe->bidPerAuction.record(bidAmount);
             cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
+            this->containingUe->numRound2Sessions++;
             submitBid(rpis.front(), bidAmount);
         } else {
+            this->containingUe->breakStatusPerAuction.record(2);
             delete rpis.front();
         }
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
+        this->containingUe->breakStatusPerAuction.record(1);
         // Let the UE know this is infeasible
         handleBidRejection();
     }
@@ -73,7 +80,12 @@ void UserAgent::submitBid(AppBWRes* rpi, double budget) {
 
 void UserAgent::handleBidResponse(BidResponse* bidResult) {
     if (bidResult->isBidResult()) {// Won the bid
-        moneySpentAggregate += bidResult->getPayment();
+        this->containingUe->breakStatusPerAuction.record(4);
+        double payment = bidResult->getPayment();
+        this->containingUe->paymentPerRound2Won.record(payment);
+        remainingBudgetFromLastAuction = (remainingBudgetFromLastAuction + budget) - payment;
+        moneySpentAggregate += payment;
+        moneySpentToday += payment;
         // Inform the UE
         AppAccessResponse* response = new AppAccessResponse();
         response->setStatus(true);
@@ -92,8 +104,11 @@ void UserAgent::handleBidResponse(BidResponse* bidResult) {
         }
         this->containingUe->processUAResponse(response);
     } else {
+        this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
+        remainingBudgetFromLastAuction += budget;
     }
+    this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget - moneySpentToday);
     delete bidResult;
 }
 
@@ -116,6 +131,12 @@ void UserAgent::getReservedAccess() {
         }
     }
 
+    if (currentAuction == 0 ){ // 1st Auction of the pseudo day
+        moneySpentToday = 0;
+        this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget);
+        remainingBudgetFromLastAuction = 0; // Money leftover from previous day doesnt rollover
+    }
+
     AppBWReq* rpiOfInterest = rpisOfDay[currentAuction];
     ongoingActivity = rpiOfInterest->getActivityType();
     askingDownlinkThroughput = rpiOfInterest->getDlBandwidth();
@@ -123,8 +144,9 @@ void UserAgent::getReservedAccess() {
     askingDlDuration = rpiOfInterest->getDlDuration();
     askingUlDuration = rpiOfInterest->getUlDuration();
 
-    if(currentAuction==numAuctionsPerDay)
+    if(currentAuction==numAuctionsPerDay) {
         currentAuction=0;
+    }
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }

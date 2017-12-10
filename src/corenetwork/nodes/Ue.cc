@@ -22,11 +22,12 @@ Define_Module(Ue);
 
 //int Ue::counter = 0;
 void Ue::finish() {
-    recordScalar("Initiated Sessions", numSessions);
-    recordScalar("Initiated Browser Sessions", numBrowserSessions);
-    recordScalar("Initiated TCP Video Sessions", numTCPVideoSessions);
-    recordScalar("Initiated TCP Audio Sessions", numTCPAudioSessions);
-    recordScalar("Initiated UDP Sessions", numUDPSessions);
+    recordScalar("Initiated Round1 Sessions", numRound1Sessions);
+    recordScalar("Initiated Round2 Sessions", numRound2Sessions);
+    recordScalar("Initiated Data Sessions", numDataSessions);
+    recordScalar("Daily budget", totalBudget);
+    recordScalar("Data needs per day", numOfAuctions);
+    recordScalar("Reg User", (myType == "ue" ? 1 : 0)); // 1 if regular user, 0 else
 }
 
 Ue::Ue() {
@@ -43,6 +44,13 @@ Ue::~Ue() {
 }
 
 void Ue::initialize() {
+    utilityPerAuction.setName("Utility per Round1");
+    bidPerAuction.setName("Bid per Round2");
+    breakStatusPerAuction.setName("Status per Auction");
+    rpiDesiredAt.setName("Time at which Round1 is initiated");
+    paymentPerRound2Won.setName("Payments for winning bids");
+    bRemProgressionPerRound2AllDays.setName("Progression of Budget Per Round2"); // Regardless of any of the Round 2 outcomes
+
     deterministic = par("deterministic").boolValue();
     totalBudget = par("budget").longValue();
     if (totalBudget <= 0) {
@@ -177,7 +185,9 @@ void Ue::startNextActivity() {
 
     // Start only for realtime
     if(type=="RealtimeVideo") {
+        rpiDesiredAt.record(1); // The value here doesnt matter; it only matters that we get the timestamp at this point
         ua->getReservedAccess();
+        numRound1Sessions++;
     } else {
         throw cRuntimeError("Activity of any other type than RealtimeVideo is unsupported!");
     }
@@ -186,6 +196,7 @@ void Ue::startNextActivity() {
 void Ue::processUAResponse(cMessage* message) {
     AppAccessResponse* appAccessResponse = check_and_cast<AppAccessResponse*>(message);
     if (appAccessResponse->isStatus()) { //Indicates Success
+        numDataSessions++;
         string activityType = appAccessResponse->getActivityType();
 
        // Absolutely none of these ar ebeing used to influence actual activity flows.
@@ -203,43 +214,16 @@ void Ue::processUAResponse(cMessage* message) {
         }
         set<ActivityDAO>::iterator iter = activities.begin();
         ActivityDAO activityToLaunch = (*iter);
-
-        unsigned int downlink = ((8*activityToLaunch.getDownlink()) < activityToLaunch.getDownlink() ? UINT_MAX: 8*activityToLaunch.getDownlink());
-        unsigned int uplink = ((8*activityToLaunch.getUplink()) < activityToLaunch.getUplink() ? UINT_MAX: 8*activityToLaunch.getUplink());
-        if (activityType == "Browser" || activityType == "TCP") {
-            EV_DEBUG << "Starting Browser Activity for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            numBrowserSessions++;
-            lastActiveAppType = "Browser";
-        }
-        else if (activityType == "Audio") {
-            EV_DEBUG << "Starting Audio Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            numTCPAudioSessions++;
-            lastActiveAppType = "Audio";
-            expectedDurationActivity = appAccessResponse->getGrantedDownlinkDuration();
-        } else if (activityType == "Video") {
-            EV_DEBUG << "Starting Video Stream for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            numTCPVideoSessions++;
-            lastActiveAppType = "Video";
-            expectedDurationActivity = appAccessResponse->getGrantedDownlinkDuration();
-        } else if (activityType == "RealtimeVideo") {
-            // UDP Video streaming
-            EV_DEBUG << "Starting Realtime Streaming for Uplink: " << uplink << " And Downlink " << downlink << endl;
-            numUDPSessions++;
-            lastActiveAppType = "RealtimeVideo";
-            expectedDurationActivity = ceil(max(appAccessResponse->getGrantedDownlinkDuration(), appAccessResponse->getGrantedUplinkDuration()));// ceil( max(uplink/uplinkThroughput, downlink/downlinkThroughput));
-        }
-
         if (activityType == "RealtimeVideo") {
-            udpOn = true;
+            // UDP Video streaming
+            expectedDurationActivity = ceil(max(appAccessResponse->getGrantedDownlinkDuration(), appAccessResponse->getGrantedUplinkDuration()));
         } else {
-            tcpOn = true;
+            throw cRuntimeError("Unrecognized activity type in Ue!");
         }
         scheduleNextActivity();
     } else {
-        EV_DEBUG << "Abort activity" << endl;
         handleFailure(appAccessResponse);
     }
-    numSessions++;
     appAccessResponse = NULL;
     delete message;
 }
@@ -247,10 +231,6 @@ void Ue::processUAResponse(cMessage* message) {
 void Ue::handleFailure(AppAccessResponse* appAccessResponse) {
     // Move on
     scheduleNextActivity();
-}
-
-void Ue::setTcpDone() {
-    this->tcpOn = false;
 }
 
 void Ue::sendRPIResponse(BidResponse* bidResponse) {

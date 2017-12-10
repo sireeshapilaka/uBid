@@ -38,7 +38,6 @@ class Ue : public cSimpleModule {
 public:
     Ue();
     virtual ~Ue();
-    void setTcpDone();
     virtual void finish() override;
     void endCurrentActivityIfOngoing();
     void scheduleNextActivity();
@@ -50,30 +49,24 @@ public:
     int expectedDurationActivity = 0;
     string myType;
     int totalBudget = -1;
+    int numRound2Sessions = 0;
+    int numRound1Sessions = 0;
+    int numDataSessions = 0;
+    cOutVector utilityPerAuction; // for the rounds that actually returns with a bundle
+    cOutVector bidPerAuction; // for the rounds we actually get around to bidding in
+    cOutVector breakStatusPerAuction; // For each scheduled rpi need, this is 1: if round1 returned no feasible RPIs, 2: if utility did not exceed threshold, 3: if bid was lost, 4: if bid was won
+    cOutVector rpiDesiredAt;  // The value here doesnt matter; it only matters that we get the timestamp at this point
+    cOutVector paymentPerRound2Won;
+    cOutVector bRemProgressionPerRound2AllDays;
 protected:
   virtual void initialize() override;
   virtual void handleMessage(cMessage *msg) override;
-  bool isAnyApplicationActive();
 private:
-  string lastActiveAppType;
-  int numTCPApps;
   string users[21];
   string dates[7];
   cRNG* rng;
-  bool tcpOn = false;
-  bool udpOn = false;
   string myAddress;
   bool addressSet = false;
-  int numSessions = 0;
-  int numRequestedSession = 0;
-  int numTCPVideoSessions = 0;
-  int numRequestedTCPVideoSessions = 0;
-  int numTCPAudioSessions = 0;
-  int numRequestedTCPAudioSessions = 0;
-  int numBrowserSessions = 0;
-  int numRequestedBrowserSessions = 0;
-  int numUDPSessions = 0;
-  int numRequestedUDPSessions = 0;
 protected:
   UserAgent* ua;
   std::multiset<ActivityDAO> activities;

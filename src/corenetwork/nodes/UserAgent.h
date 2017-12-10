@@ -45,10 +45,11 @@ public:
 private:
     // Ongoing = currently under negotiation for
     double budget;
-    unsigned int rpiDownlinkBytes = 0;
-    unsigned int rpiUplinkBytes = 0;
     double moneySpentAggregate = 0;
     double alpha = 0;
+    double remainingBudgetFromLastAuction = 0;
+    double totalDailyBudget = 0;
+    double moneySpentToday = 0;
     // THIS IS A HUERISTIC - currently the same for all users
     double utilityThreshold = .01;
     int utilityScalingFactor = 1000;

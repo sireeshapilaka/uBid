@@ -103,17 +103,11 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         AppAccessResponse* response = new AppAccessResponse();
         response->setStatus(true);
         response->setActivityType(ongoingActivity);
-        if (ongoingActivity == "Video" || ongoingActivity == "Audio") {
-            response->setGrantedDownlinkThroughput(rpiDownlinkThroughput);
-        } else if (ongoingActivity == "RealtimeVideo") {
+        if (ongoingActivity == "RealtimeVideo") {
             response->setGrantedDownlinkThroughput(rpiDownlinkThroughput);
             response->setGrantedUplinkThroughput(rpiUplinkThroughput);
-        } else { //Bursty Traffic
-            // TODO We need to maintain uplink and downlink durations differently
-            // However, we are not going to change anything for bursty traffic, just monitoring whether
-            // the duration we receive is as promised.
-            response->setGrantedUplinkDuration(rpiUplinkDuration);
-            response->setGrantedDownlinkDuration(rpiDownlinkDuration);
+        } else {
+            throw cRuntimeError("Unrecognized app type in UseragentMC!");
         }
         this->containingUe->processUAResponse(response);
     } else {
