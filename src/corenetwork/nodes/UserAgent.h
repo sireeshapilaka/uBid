@@ -49,7 +49,9 @@ private:
     unsigned int rpiUplinkBytes = 0;
     double moneySpentAggregate = 0;
     double alpha = 0;
-
+    // THIS IS A HUERISTIC - currently the same for all users
+    double utilityThreshold = .01;
+    int utilityScalingFactor = 1000;
 protected:
     Ue* containingUe;
     NetworkAgent* networkAgent = NULL;

@@ -29,7 +29,6 @@ UserAgent::~UserAgent() {
 
 // TODO: POLICY!: Currently: Always bid on the highest RPI
 void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
-    bool bidding = true;
     if (this->rng == NULL) {
         rng = this->containingUe->getParentModule()->getRNG(0);
         if (rng == NULL) {
@@ -42,12 +41,11 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         rpiDownlinkThroughput = rpiOfInterest->getDlBandwidth();
         rpiUplinkThroughput = rpiOfInterest->getUlBandwidth();
 
-        if(rpiOfInterest!=NULL)
-            cout << "Utility for user " << this->containingUe->getId() << " is: " << getUtility(rpiOfInterest) << endl;
-
-        if (bidding) {
-            // Currently bidding is always true; but we may later want to do some utility-based decision for which RPI to pick, if at all
-            double bidAmount = intuniform(rng, 1, budget);
+        double utility = getUtility(rpiOfInterest);
+        if (utility >= utilityThreshold) {
+            double trueValuation = utility*utilityScalingFactor;
+            double bidAmount = min(trueValuation, budget);
+            cout << "Utility for regular user is: " << utility << " and bid anount is "<< bidAmount <<  endl;
             submitBid(rpis.front(), bidAmount);
         } else {
             delete rpis.front();

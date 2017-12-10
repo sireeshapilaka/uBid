@@ -210,10 +210,14 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             delete [] decisions_temp;
 
             //Price to charge this winner
-            double price = (paymentWithoutWinner)-(totalPayment-bidOfInterest->getBidAmount());
-            if(price<0)
+            double tempPrice = (paymentWithoutWinner)-(totalPayment-bidOfInterest->getBidAmount());
+            double price = roundf(tempPrice * 100) / 100;
+            if(price<-.01)
                 throw cRuntimeError("Invalid price encountered");
-            pricesToCharge[i] = price;
+            if (price < 0 && price > -.01) {
+                price = 0;
+            }
+            pricesToCharge[i] =  price;
         } else {
             pricesToCharge[i] = 0;
         }

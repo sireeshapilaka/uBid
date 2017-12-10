@@ -25,5 +25,6 @@ network McNetwork
             @display("i=block/network2;bgb=6000,6000;");
     submodules:
     	networkAgent: Negotiator {}
-    	ueMC[3] : UeMC {}
+   		ueMC[3] : UeMC {}
+    	ue[2] : Ue {}
 }
