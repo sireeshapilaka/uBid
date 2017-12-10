@@ -20,6 +20,7 @@ UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numO
     }
 
     brem = ((UeMC* )(this->containingUe))->getDailybudget();
+    this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     currentAuction = 0;
 }
 
@@ -74,15 +75,21 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
         double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
-        if(currentEvent!=NULL) {
-            currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
-                    rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), getUtility(rpiOfInterest));
-            currentEvent->updateBidValue(bidAmount);
+        if(currentEvent == NULL) {
+            throw cRuntimeError("currentevent is null in handleRPIResponse");
         }
+        double thisUtility = getUtility(rpiOfInterest);
+        currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
+                rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), thisUtility);
+        currentEvent->updateBidValue(bidAmount);
+        this->containingUe->utilityPerAuction.record(thisUtility);
+        this->containingUe->bidPerAuction.record(bidAmount);
         submitBid(rpis.front(), bidAmount);
+        this->containingUe->numRound2Sessions++;
 
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
         // Let the UE know this is infeasible
+        this->containingUe->breakStatusPerAuction.record(1);
         handleBidRejection();
         updateAuctionNum();
     }
@@ -93,7 +100,10 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
 
 void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
     if (bidResult->isBidResult()) {// Won the bid
-        brem -=bidResult->getPayment();
+        this->containingUe->breakStatusPerAuction.record(4);
+        double payment = bidResult->getPayment();
+        brem -= payment;
+        this->containingUe->paymentPerRound2Won.record(payment);
 
         cout << "MC user >>> bid win " << brem<< endl;
         if(currentEvent!=NULL)
@@ -112,9 +122,12 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         this->containingUe->processUAResponse(response);
     } else {
         cout << "MC user >> bid win - lost" << endl;
+        this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
     }
+    this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     updateAuctionNum();
+    delete bidResult;
 }
 
 double UserAgentMC::computeBid(double* dl, double* ul) {
@@ -237,6 +250,7 @@ void UserAgentMC::updateAuctionNum() {
         // End of day
         brem = ((UeMC* )(this->containingUe))->getDailybudget();
         currentAuction = 0;
+        this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     }
 }
 
