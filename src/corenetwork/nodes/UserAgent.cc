@@ -45,7 +45,7 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         if (utility >= utilityThreshold) {
             double trueValuation = utility*utilityScalingFactor;
             double bidAmount = min(trueValuation, budget);
-            cout << "Utility for regular user is: " << utility << " and bid anount is "<< bidAmount <<  endl;
+            cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
             submitBid(rpis.front(), bidAmount);
         } else {
             delete rpis.front();
@@ -108,7 +108,7 @@ void UserAgent::handleBidRejection() {
 }
 
 // Current policy/default: Always ask for the STD in all classes
-void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink) {
+void UserAgent::getReservedAccess() {
     if (this->networkAgent == NULL) {
         networkAgent = dynamic_cast<NetworkAgent*>(this->containingUe->getParentModule()->getSubmodule("networkAgent"));
         if (networkAgent == NULL) {
@@ -125,7 +125,7 @@ void UserAgent::getReservedAccess(string appType, unsigned int downlinkSize, uns
 
     if(currentAuction==numAuctionsPerDay)
         currentAuction=0;
-    AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
+    AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }
 

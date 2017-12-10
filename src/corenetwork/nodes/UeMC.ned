@@ -30,4 +30,5 @@ module UeMC
         //# Node specs
         string nodeType = "ueMC";  // DO NOT CHANGE
         int budget; // VALUE MUST BE SET IN OMNETPP.INI
+        bool deterministic = true;
 }

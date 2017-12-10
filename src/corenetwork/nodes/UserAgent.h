@@ -35,7 +35,7 @@ class UserAgent {
 public:
     UserAgent(Ue* ue, double budgetPerSession, vector<AppBWReq*> rpis, int numOfAuctions);
     virtual ~UserAgent();
-    virtual void getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink);
+    virtual void getReservedAccess();
     void handleBidRejection();
     virtual void handleRPIResponse(list<AppBWRes*> rpis);
     virtual void handleBidResponse(BidResponse* bidResult);

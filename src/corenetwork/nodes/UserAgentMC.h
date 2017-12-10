@@ -42,7 +42,7 @@ private:
 public:
     UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numOfAuctions);
     virtual ~UserAgentMC();
-    void getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink) override;
+    void getReservedAccess() override;
     void handleRPIResponse(list<AppBWRes*> rpis) override;
     void handleBidResponse(BidResponse* bidResult) override;
     double computeBid(double* dl, double* ul);

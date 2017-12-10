@@ -293,14 +293,20 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     if (activityType=="RealtimeVideo") {
         ulDuration = appBwReq->getUlDuration();
         ulBandwidth = resourceManager.getResourceAllocationBundle(ulDuration, activityType, appBwReq->getUlBandwidth(), 0);
+        if (ulBandwidth == NULL) {
+            ulDuration = 0;
+        }
     }
     int dlDuration = appBwReq->getDlDuration();
     double *dlBandwidth = resourceManager.getResourceAllocationBundle(dlDuration, activityType, appBwReq->getDlBandwidth(), 1);
+    if (dlBandwidth == NULL) {
+        dlDuration = 0;
+    }
 
     delete appBwReq;
 
     AppBWRes* appBwRes = NULL;
-    if (dlBandwidth != NULL || (ulBandwidth != NULL && dlDuration == 0)) {
+    if (dlBandwidth != NULL || ulBandwidth != NULL) {
         appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
         appBwRes->setActivityType(activityType);
     }

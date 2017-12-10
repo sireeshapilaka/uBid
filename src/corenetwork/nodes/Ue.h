@@ -82,6 +82,7 @@ protected:
   vector<AppBWReq*> rpisPerDay;
   int numOfAuctions = 4;
   vector<int> startTimes;
+  bool deterministic = true;
 };
 
 #endif /* CORENETWORK_NODES_UE_H_ */

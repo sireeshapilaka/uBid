@@ -27,8 +27,7 @@ UserAgentMC::~UserAgentMC() {
     // TODO Auto-generated destructor stub
 }
 
-void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, unsigned int uplinkSize, int desiredDurationUplink, int desiredDurationDownlink) {
-    cout << "MC user negotiating for " << appType << " at " << simTime()<<endl;
+void UserAgentMC::getReservedAccess() {
     if (this->networkAgent == NULL) {
         networkAgent = dynamic_cast<NetworkAgent*>(this->containingUe->getParentModule()->getSubmodule("networkAgent"));
         if (networkAgent == NULL) {
@@ -50,9 +49,10 @@ void UserAgentMC::getReservedAccess(string appType, unsigned int downlinkSize, u
     askingUplinkThroughput = rpiOfInterest->getUlBandwidth();
     askingDlDuration = rpiOfInterest->getDlDuration();
     askingUlDuration = rpiOfInterest->getUlDuration();
+    cout << "MC user negotiating for " << ongoingActivity << " at " << simTime()<<endl;
 
-    AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
-    currentEvent = new MCevent(currentAuction, new AppBWReq(askingUplinkBytes, askingDownlinkBytes, appType, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
+    AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
+    currentEvent = new MCevent(currentAuction, new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
     handleRPIResponse(networkAgent->getRPIs(bwReq));
 }
 

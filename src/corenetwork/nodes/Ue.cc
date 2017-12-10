@@ -43,6 +43,7 @@ Ue::~Ue() {
 }
 
 void Ue::initialize() {
+    deterministic = par("deterministic").boolValue();
     totalBudget = par("budget").longValue();
     if (totalBudget <= 0) {
         throw cRuntimeError("User has budget <= 0!");
@@ -111,10 +112,21 @@ void Ue::initialize() {
        }
     }
 
+    if (this->rng == NULL) {
+        rng = this->getParentModule()->getRNG(0);
+        if (rng == NULL) {
+            throw cRuntimeError("No RNG found!");
+        }
+    }
+
     // Schedule 1st activity
     ActivityDAO firstAc = *activities.begin();
     int startTime = firstAc.getStartTimeInSeconds();
-    scheduleAt((simtime_t)startTime, startActivity);
+    int offset = 0;
+    if (!deterministic) { // only possible for non MC users
+        offset = intuniform(0, 15, 0);
+    }
+    scheduleAt((simtime_t)(startTime + offset), startActivity);
 }
 
 void Ue::handleMessage(cMessage *msg) {
@@ -136,11 +148,17 @@ void Ue::scheduleNextActivity() {
         ActivityDAO activityToLaunch = (*iter);
         int startTimeForActivity = activityToLaunch.getStartTimeInSeconds();
         simtime_t currentTime = simTime();
+
+        int offset = 0;
+        if (!deterministic) { // only possible for non MC users
+            offset = intuniform(0, 15, 0);
+        }
+
         if (startTimeForActivity < currentTime.dbl()) {
-            int schedTime = ceil(currentTime.dbl()) + expectedDurationActivity;
+            int schedTime = ceil(currentTime.dbl()) + expectedDurationActivity + offset;
             scheduleAt(SimTime(schedTime), startActivity);
         } else {
-            int schedTime = max(startTimeForActivity, (int)ceil(currentTime.dbl()) + expectedDurationActivity);
+            int schedTime = max(startTimeForActivity, (int)ceil(currentTime.dbl()) + expectedDurationActivity) + offset;
             scheduleAt(SimTime(schedTime), startActivity);
         }
         expectedDurationActivity = 0;
@@ -154,15 +172,15 @@ void Ue::startNextActivity() {
     if(activities.size()==0) return;
     set<ActivityDAO>::iterator iter = activities.begin();
     ActivityDAO activityToLaunch = (*iter);
-    // TODO: provide desired duration for uplink and downlink
     string type = activityToLaunch.getActivityType();
-    unsigned int dl = activityToLaunch.getDownlink();
-    unsigned int ul = activityToLaunch.getUplink();
     activities.erase(activities.begin());
 
     // Start only for realtime
-    if(type=="RealtimeVideo")
-        ua->getReservedAccess(type, dl, ul, 0, 0);
+    if(type=="RealtimeVideo") {
+        ua->getReservedAccess();
+    } else {
+        throw cRuntimeError("Activity of any other type than RealtimeVideo is unsupported!");
+    }
 }
 
 void Ue::processUAResponse(cMessage* message) {

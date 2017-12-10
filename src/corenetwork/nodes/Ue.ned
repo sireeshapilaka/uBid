@@ -30,4 +30,5 @@ module Ue
         //# Node specs
         string nodeType = "ue";  // DO NOT CHANGE
         int budget;
+        bool deterministic = default(true);
 }
