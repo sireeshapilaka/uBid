@@ -26,5 +26,5 @@ network McNetwork
     submodules:
     	networkAgent: Negotiator {}
    		ueMC[3] : UeMC {}
-    	ue[2] : Ue {}
+    	ue[20] : Ue {}
 }
