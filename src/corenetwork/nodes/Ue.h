@@ -73,7 +73,7 @@ protected:
   cMessage* startActivity = new cMessage("StartActivity");
   string appTrafficFileName;
   vector<AppBWReq*> rpisPerDay;
-  int numOfAuctions = 4;
+  int numOfAuctions;
   vector<int> startTimes;
   bool deterministic = true;
 };

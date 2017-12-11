@@ -47,14 +47,22 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         this->containingUe->utilityPerAuction.record(utility);
         if (utility >= utilityThreshold) {
             double trueValuation = utility*utilityScalingFactor;
-            double bidAmount = min(trueValuation, budget + remainingBudgetFromLastAuction);
+            int bidAmount = min(trueValuation, budget + remainingBudgetFromLastAuction);
             this->containingUe->bidPerAuction.record(bidAmount);
             cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
             this->containingUe->numRound2Sessions++;
-            submitBid(rpis.front(), bidAmount);
+            if(bidAmount!=0)
+                submitBid(rpis.front(), bidAmount);
+            else {
+                // TODO: Check the record status
+                this->containingUe->breakStatusPerAuction.record(2);
+                delete rpis.front();
+                handleBidRejection();
+            }
         } else {
             this->containingUe->breakStatusPerAuction.record(2);
             delete rpis.front();
+            handleBidRejection();
         }
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
         this->containingUe->breakStatusPerAuction.record(1);
@@ -66,8 +74,8 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
     }
 }
 
-void UserAgent::submitBid(AppBWRes* rpi, double budget) {
-    EV_DEBUG << "Submitting bid with budget " << to_string((int)budget) << endl;
+void UserAgent::submitBid(AppBWRes* rpi, double bid) {
+    EV_DEBUG << "Submitting bid with budget " << to_string((int)bid) << endl;
     if (myName < 0) {
         myName = this->containingUe->getIndex();
         EV_DEBUG << "Index " << myName << endl;
@@ -75,7 +83,7 @@ void UserAgent::submitBid(AppBWRes* rpi, double budget) {
             throw cRuntimeError("UE Name cannot be empty");
         }
     }
-    networkAgent->submitBid(this->containingUe->myType, myName, rpi, budget);
+    networkAgent->submitBid(this->containingUe->myType, myName, rpi, bid);
 }
 
 void UserAgent::handleBidResponse(BidResponse* bidResult) {
@@ -144,6 +152,7 @@ void UserAgent::getReservedAccess() {
     askingDlDuration = rpiOfInterest->getDlDuration();
     askingUlDuration = rpiOfInterest->getUlDuration();
 
+    currentAuction++;
     if(currentAuction==numAuctionsPerDay) {
         currentAuction=0;
     }

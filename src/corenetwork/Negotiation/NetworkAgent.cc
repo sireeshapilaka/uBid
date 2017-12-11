@@ -288,28 +288,32 @@ list<AppBWRes*> NetworkAgent::getRPIs(AppBWReq* appBwReq) {
     // Generate RPIs for this BW request and return
     list<AppBWRes*> rpis;
     string activityType = appBwReq->getActivityType();
+    int res_ulDuration = 0, res_dlDuration = 0;
     int ulDuration = 0;
     double *ulBandwidth = NULL;
     if (activityType=="RealtimeVideo") {
         ulDuration = appBwReq->getUlDuration();
+        res_ulDuration = ulDuration;
         ulBandwidth = resourceManager.getResourceAllocationBundle(ulDuration, activityType, appBwReq->getUlBandwidth(), 0);
         if (ulBandwidth == NULL) {
-            ulDuration = 0;
+            res_ulDuration = 0;
         }
     }
     int dlDuration = appBwReq->getDlDuration();
+    res_dlDuration = dlDuration;
     double *dlBandwidth = resourceManager.getResourceAllocationBundle(dlDuration, activityType, appBwReq->getDlBandwidth(), 1);
     if (dlBandwidth == NULL) {
-        dlDuration = 0;
+        res_dlDuration = 0;
     }
 
     delete appBwReq;
 
     AppBWRes* appBwRes = NULL;
-    if (dlBandwidth != NULL || ulBandwidth != NULL) {
-        appBwRes = new AppBWRes(dlDuration, ulDuration, dlBandwidth, ulBandwidth);
-        appBwRes->setActivityType(activityType);
-    }
+    if((res_dlDuration==dlDuration && res_ulDuration==ulDuration))
+        if (dlBandwidth != NULL || ulBandwidth != NULL) {
+            appBwRes = new AppBWRes(res_dlDuration, res_ulDuration, dlBandwidth, ulBandwidth);
+            appBwRes->setActivityType(activityType);
+        }
 
     if (appBwRes != NULL) {
         rpis.push_back(appBwRes);

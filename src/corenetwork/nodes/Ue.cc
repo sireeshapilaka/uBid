@@ -101,7 +101,7 @@ void Ue::initialize() {
     scriptfilestream.close();
     numOfAuctions = numAc;
 
-    double budgetPerSession = totalBudget/numOfAuctions; // Naive Budget distribution strategy by Non MC User;
+    double budgetPerSession = double(totalBudget)/numOfAuctions; // Naive Budget distribution strategy by Non MC User;
     if (numOfAuctions <= 0) {
         throw cRuntimeError("This user wants nothing ever?");
     }
