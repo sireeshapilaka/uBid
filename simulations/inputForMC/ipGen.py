@@ -28,29 +28,37 @@ for userId in xrange(numOfUsers):
         # 3 types of rpis - upload, download and both
         type = random.randrange(1,4)
         if type==1:
-            # Skype real-time - duration can be max 15 = 15*12 = 180 min = 3 hours
-            ulDuration = random.randrange(1, 16)
+            # Skype real-time - duration can be max 5 = 5*12 = 60 min = 1 hour
+            ulDuration = random.randrange(1, 6)
             dlDuration = ulDuration
             modeIdx = random.randrange(0, 4)
             ulThroughput = modes[modeIdx]
             modeIdx = random.randrange(0,4)
             dlThroughput = modes[modeIdx]
         elif type==2:
-            # Only Upload
-            # Maximum support 10 Gb = 10^6 Kb = 100*10^4 Kb
-            # Minimum support - least mode & least time duration = 400Kbps * 12min = (approx) 300 Mb = 30*10^4 Kb
-            data = random.randrange(30, 101)
-            modeIdx = random.randrange(0, 4)
+            ulDuration = random.randrange(1, 6)
+            modeIdx = random.randrange(0,4)
             ulThroughput = modes[modeIdx]
-            # Duration = (x*10^4)/M seconds = (x/M)*(10000/(12*60)) fake seconds = (x/M)*(1000/72) fake seconds
-            # where M = throughput in Kbps
-            ulDuration = int(math.ceil((data*1000.0)/(ulThroughput*72.0)))
         else:
-            # Only Download - Limits same as only upload case
-            data = random.randrange(30,101)
+            dlDuration = random.randrange(1, 6)
             modeIdx = random.randrange(0,4)
             dlThroughput = modes[modeIdx]
-            dlDuration = int(math.ceil((data*1000.0)/(dlThroughput*72.0)))
+        # elif type==2:
+        #     # Only Upload
+        #     # Maximum support 10 Gb = 10^6 Kb = 100*10^4 Kb
+        #     # Minimum support - least mode & least time duration = 400Kbps * 12min = (approx) 300 Mb = 30*10^4 Kb
+        #     data = random.randrange(30, 101)
+        #     modeIdx = random.randrange(0, 4)
+        #     ulThroughput = modes[modeIdx]
+        #     # Duration = (x*10^4)/M seconds = (x/M)*(10000/(12*60)) fake seconds = (x/M)*(1000/72) fake seconds
+        #     # where M = throughput in Kbps
+        #     ulDuration = int(math.ceil((data*1000.0)/(ulThroughput*72.0)))
+        # else:
+        #     # Only Download - Limits same as only upload case
+        #     data = random.randrange(30,101)
+        #     modeIdx = random.randrange(0,4)
+        #     dlThroughput = modes[modeIdx]
+        #     dlDuration = int(math.ceil((data*1000.0)/(dlThroughput*72.0)))
 
         # Insert into a sorted list (sorted as per time)
         pos = 0
