@@ -100,6 +100,12 @@ void Ue::initialize() {
 
     scriptfilestream.close();
     numOfAuctions = numAc;
+    
+    // To allow at least session budget to be at least 1, granting some additional budget
+    if(totalBudget<numOfAuctions) {
+        int randomness = rand()%2;
+        totalBudget = numOfAuctions + randomness;
+    }
 
     double budgetPerSession = double(totalBudget)/numOfAuctions; // Naive Budget distribution strategy by Non MC User;
     if (numOfAuctions <= 0) {
