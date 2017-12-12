@@ -57,11 +57,11 @@ void Ue::initialize() {
         throw cRuntimeError("User has budget <= 0!");
     }
     // Populate rpis from the file
-    int userId = par("userIndex").longValue();
+    int userId = getIndex();
     this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
     string filePath = this->appTrafficFileName + to_string(userId)+ "/";
     myType = par("nodeType").stringValue();
-    cout << "File is " << filePath << endl;
+    cout << "File for user "<< userId<< " is " << filePath << endl;
 
     // Dealing with only RealtimeVideo
     string fileName = filePath+"RealtimeVideo.config";

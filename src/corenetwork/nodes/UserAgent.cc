@@ -48,12 +48,12 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         if (utility >= utilityThreshold) {
             double trueValuation = utility*utilityScalingFactor;
             int bidAmount = min(trueValuation, budget + remainingBudgetFromLastAuction);
-            this->containingUe->bidPerAuction.record(bidAmount);
             cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
             this->containingUe->numRound2Sessions++;
-            if(bidAmount!=0)
+            if(bidAmount!=0) {
+                this->containingUe->bidPerAuction.record(bidAmount);
                 submitBid(rpis.front(), bidAmount);
-            else {
+            } else {
                 // TODO: Check the record status
                 this->containingUe->breakStatusPerAuction.record(2);
                 delete rpis.front();

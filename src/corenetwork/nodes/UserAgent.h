@@ -51,7 +51,7 @@ private:
     double totalDailyBudget = 0;
     double moneySpentToday = 0;
     // THIS IS A HUERISTIC - currently the same for all users
-    double utilityThreshold = .01;
+    double utilityThreshold = 0;
     int utilityScalingFactor = 1000;
 protected:
     Ue* containingUe;
