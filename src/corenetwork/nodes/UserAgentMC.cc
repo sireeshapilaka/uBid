@@ -20,7 +20,6 @@ UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numO
     }
 
     brem = ((UeMC* )(this->containingUe))->getDailybudget();
-    this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     currentAuction = 0;
 }
 
@@ -104,6 +103,7 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         double payment = bidResult->getPayment();
         brem -= payment;
         this->containingUe->paymentPerRound2Won.record(payment);
+        this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
 
         cout << "MC user >>> bid win " << brem<< endl;
         if(currentEvent!=NULL)
@@ -125,7 +125,6 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
     }
-    this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     updateAuctionNum();
     delete bidResult;
 }
@@ -250,7 +249,7 @@ void UserAgentMC::updateAuctionNum() {
         // End of day
         brem = ((UeMC* )(this->containingUe))->getDailybudget();
         currentAuction = 0;
-        this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
+        // this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
     }
 }
 

@@ -22,7 +22,6 @@ UserAgent::UserAgent(Ue* containingUe, double budgetPerSession, vector<AppBWReq*
     this->rpisOfDay = rpis;
     this->numAuctionsPerDay = numOfAuctions;
     this->totalDailyBudget = numOfAuctions*budgetPerSession;
-    this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget);
 }
 
 UserAgent::~UserAgent() {
@@ -94,6 +93,7 @@ void UserAgent::handleBidResponse(BidResponse* bidResult) {
         remainingBudgetFromLastAuction = (remainingBudgetFromLastAuction + budget) - payment;
         moneySpentAggregate += payment;
         moneySpentToday += payment;
+        this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget - moneySpentToday);
         // Inform the UE
         AppAccessResponse* response = new AppAccessResponse();
         response->setStatus(true);
@@ -116,7 +116,6 @@ void UserAgent::handleBidResponse(BidResponse* bidResult) {
         handleBidRejection();
         remainingBudgetFromLastAuction += budget;
     }
-    this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget - moneySpentToday);
     delete bidResult;
 }
 
@@ -141,7 +140,7 @@ void UserAgent::getReservedAccess() {
 
     if (currentAuction == 0 ){ // 1st Auction of the pseudo day
         moneySpentToday = 0;
-        this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget);
+        // this->containingUe->bRemProgressionPerRound2AllDays.record(totalDailyBudget);
         remainingBudgetFromLastAuction = 0; // Money leftover from previous day doesnt rollover
     }
 
