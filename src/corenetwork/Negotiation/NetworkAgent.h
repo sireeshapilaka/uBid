@@ -50,6 +50,7 @@ private:
     list<AppBWRes*> bidsForNextAuction;
     GRBEnv* env;
     simtime_t timeOfNextAuction;
+    const int dayInSimulationTime = 120;
 };
 
 #endif /* CORENETWORK_NEGOTIATION_NETWORKAGENT_H_ */

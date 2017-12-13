@@ -240,6 +240,32 @@ void ResourceManager::AddTower(double ulCapacity, double dlCapacity){
     dlCellAllocCountMapList->push_back(resCountMap);
 }
 
+void ResourceManager::clearAllEntries() {
+    for (auto it = ulCellRsrcAllocMapList->cbegin(); it != ulCellRsrcAllocMapList->cend(); ++it) {
+        std::map<SimTime,double>::iterator itlow;
+        CellResourceAllocMap* resrcMap = (*it);
+        resrcMap->clear();
+    }
+
+    for (auto it = dlCellRsrcAllocMapList->cbegin(); it != dlCellRsrcAllocMapList->cend(); ++it) {
+        std::map<SimTime,double>::iterator itlow;
+        CellResourceAllocMap* resrcMap = (*it);
+        resrcMap->clear();
+    }
+
+    for (auto it = ulCellAllocCountMapList->cbegin(); it != ulCellAllocCountMapList->cend(); ++it) {
+        std::map<SimTime,double>::iterator itlow;
+        CellAllocationsCountMap* resrcMap = (*it);
+        resrcMap->clear();
+    }
+
+    for (auto it = dlCellAllocCountMapList->cbegin(); it != dlCellAllocCountMapList->cend(); ++it) {
+        std::map<SimTime,double>::iterator itlow;
+        CellAllocationsCountMap* resrcMap = (*it);
+        resrcMap->clear();
+    }
+}
+
 void ResourceManager::clearElapsedEntries() {
     /* clear all the entries corresponding to elapsed time from UL and DL bandwidth maps for all cells
        * This is to prevent the dictionaries from bloating up as simulation proceeds */

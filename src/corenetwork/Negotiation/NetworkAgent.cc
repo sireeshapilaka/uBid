@@ -170,11 +170,16 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
 
 void NetworkAgent::handleMessage(cMessage* msg) {
     resourceManager.clearElapsedEntries();
+    // If a day just got over, clear all occupancies - dirty workaround
+    simtime_t curTime = simTime();
+    if ((int)(curTime.dbl()) % dayInSimulationTime == 0) {
+        resourceManager.clearAllEntries();
+    }
 
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
-        scheduleAt((simtime_t)simTime() + 1, msg);
+        scheduleAt(curTime + 1, msg);
         return;
     }
 

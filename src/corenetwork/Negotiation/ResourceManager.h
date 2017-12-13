@@ -100,6 +100,7 @@ public:
     int getNumTowers();
     void AddTower(double ulCapacity, double dlCapacity);
     void clearElapsedEntries();
+    void clearAllEntries();
     void recordStats();
     double* getResourceAllocationBundle(int duration, string appType, double throughput, int direction);
 };
