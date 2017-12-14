@@ -52,7 +52,7 @@ private:
     double moneySpentToday = 0;
     // THIS IS A HUERISTIC - currently the same for all users
     double utilityThreshold = 0;
-    int utilityScalingFactor = 1000;
+    int utilityScalingFactor = 1;
 protected:
     Ue* containingUe;
     NetworkAgent* networkAgent = NULL;

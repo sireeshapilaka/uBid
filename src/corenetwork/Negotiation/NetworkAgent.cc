@@ -26,9 +26,9 @@ NetworkAgent::~NetworkAgent() {
 
 void NetworkAgent::initialize() {
     env = new GRBEnv();
+    env->set(GRB_IntParam_OutputFlag, 0);
     // Schedule self-timer for clearing auction
-    timeOfNextAuction = simTime() + 3;
-    scheduleAt(timeOfNextAuction, new cMessage("Auction"));
+    scheduleAt(4, new cMessage("Auction"));
 }
 
 void NetworkAgent::finish() {
@@ -126,18 +126,18 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
     }
 
     model.optimize();
-    model.write("debug.lp");
+    //model.write("debug.lp");
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>( t2 - t1 ).count();
-    cout << "Time for optimization : " << duration;
+    //cout << "Time for optimization : " << duration;
     // TODO : REMOVE
     int optimstatus = model.get(GRB_IntAttr_Status);
 
-    cout << "Optimization complete" << endl;
+    //cout << "Optimization complete" << endl;
     double objval = 0;
     if (optimstatus == GRB_OPTIMAL) {
         objval = model.get(GRB_DoubleAttr_ObjVal);
-        cout << "Optimal objective: " << objval << endl;
+//        cout << "Optimal objective: " << objval << endl;
     } else if (optimstatus == GRB_INF_OR_UNBD) {
         throw cRuntimeError("Model is infeasible or unbounded");
     } else if (optimstatus == GRB_INFEASIBLE) {
@@ -145,8 +145,8 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
     } else if (optimstatus == GRB_UNBOUNDED) {
         throw cRuntimeError("Model is unbounded");
     } else {
-        cout << "Optimization was stopped with status = "
-                << optimstatus << endl;
+//        cout << "Optimization was stopped with status = "
+//                << optimstatus << endl;
     }
 
     double totalPayment = 0;
@@ -179,7 +179,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
-        scheduleAt(curTime + 1, msg);
+        scheduleAt(curTime + 2, msg);
         return;
     }
 
@@ -239,7 +239,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         AppBWRes* bidOfInterest = *iter;
         BidResponse* bidResponse = new BidResponse();
         bool decision = (decisions[i] == 1 ? true : false);
-        cout << "Decision for bid " << i << " is: " << decisions[i] << "("<<pricesToCharge[i]<< ")"<< endl;
+        //cout << "Decision for bid " << i << " is: " << decisions[i] << "("<<pricesToCharge[i]<< ")"<< endl;
         if (decision) {
             numWinners++;
             // Get corresponding bid
@@ -247,6 +247,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             if (bidOfInterest->getActivityType() == "RealtimeVideo") {
                 startSameTime = true;
             }
+//            cout << "Reserving Resources for: ULDuration: " << bidOfInterest->getUlDuration()  << " DLDuration: " << bidOfInterest->getDlDuration() << endl;
             resourceManager.ReserveResources(bidOfInterest->getUlBandwidth(), bidOfInterest->getDlBandwidth(),
                     bidOfInterest->getUlDuration(), bidOfInterest->getDlDuration(), startSameTime, currentTime);
             // Find the corresponding UE and notify
@@ -258,7 +259,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         }
         int userId = bidOfInterest->getUser();
         string userType = bidOfInterest->getUserType();
-        cout << "UE of interest is " << userType << " " << userId << endl;
+        //cout << "UE of interest is " << userType << " " << userId << endl;
 
         Ue* ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule(userType.c_str(), userId));
         if (ueOfInterest == NULL) {
@@ -277,7 +278,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     delete [] pricesToCharge;
 
     // Schedule next auction event
-    timeOfNextAuction = (simtime_t)currentTime + 1;
+    timeOfNextAuction = (simtime_t)currentTime + 2;
     scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 

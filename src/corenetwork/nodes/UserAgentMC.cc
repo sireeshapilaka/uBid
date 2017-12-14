@@ -39,6 +39,8 @@ void UserAgentMC::getReservedAccess() {
         currentEvent = NULL;
         handleBidRejection();
         updateAuctionNum();
+        this->containingUe->breakStatusPerAuction.record(3); // equivalent to bid loss
+        return;
     }
 
 
@@ -49,7 +51,7 @@ void UserAgentMC::getReservedAccess() {
     askingUplinkThroughput = rpiOfInterest->getUlBandwidth();
     askingDlDuration = rpiOfInterest->getDlDuration();
     askingUlDuration = rpiOfInterest->getUlDuration();
-    cout << "MC user negotiating for " << ongoingActivity << " at " << simTime()<<endl;
+//    cout << "MC user negotiating for " << ongoingActivity << " at " << simTime()<<endl;
 
     AppBWReq* bwReq = new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput);
     currentEvent = new MCevent(currentAuction, new AppBWReq(askingUplinkBytes, askingDownlinkBytes, ongoingActivity, askingUlDuration, askingDlDuration, askingUplinkThroughput, askingDownlinkThroughput), brem);
@@ -57,7 +59,7 @@ void UserAgentMC::getReservedAccess() {
 }
 
 void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
-    cout << "MC user handle RPI response! "<< endl;
+//    cout << "MC user handle RPI response! "<< endl;
     if (rpis.size()  == 1 && rpis.front() != NULL) {
         AppBWRes* rpiOfInterest = rpis.front();
 
@@ -71,7 +73,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         } else {
             throw cRuntimeError("Unrecognized App Type in handling RPI Response");
         }
-        cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
+//        cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
         double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
         if(currentEvent == NULL) {
@@ -105,7 +107,7 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         this->containingUe->paymentPerRound2Won.record(payment);
         this->containingUe->bRemProgressionPerRound2AllDays.record(brem);
 
-        cout << "MC user >>> bid win " << brem<< endl;
+//        cout << "MC user >>> bid win " << brem<< endl;
         if(currentEvent!=NULL)
             currentEvent->updateCp(bidResult->getPayment());
 
@@ -121,7 +123,7 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         }
         this->containingUe->processUAResponse(response);
     } else {
-        cout << "MC user >> bid win - lost" << endl;
+//        cout << "MC user >> bid win - lost" << endl;
         this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
     }
@@ -162,20 +164,25 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
     State* state = new State(currentAuction, this->brem, ulDelta, dlDelta, askingUlDuration, askingDlDuration);
     bool isStatePresent = false;
     auto stateSearched = statesVisited.find(state);
+    epsilonInverse = 0;
     if(stateSearched!=statesVisited.end()) {
         // State exists
         state = stateSearched->first;
-        epsilonInverse = stateSearched->second + 1;
+//        double dailybudget =((UeMC* )(this->containingUe))->getDailybudget();
+//        epsilonInverse = (double(stateSearched->second)/double(dailybudget))+1;
+        epsilonInverse = stateSearched->second;
         action = intuniform(epsilonRng, 1, epsilonInverse);
         isStatePresent = true;
     } else {
         // New state
         action = 1;
     }
+//    cout << "Epsilon Inverse: " << epsilonInverse << " auction: " << currentAuction << " action " << action << endl;
 
     if(action==1) {
+        int myBid = intuniform(rng, 1, brem);
         // Random action
-        return intuniform(rng, 1, brem);
+        return myBid;
     } else {
         // Optimal action
 
@@ -204,7 +211,7 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
         if(bids.size()==0)
             return intuniform(rng, 1, brem);
 
-        cout << "MC user non-random bid" << endl;
+//        cout << "MC user non-random bid" << endl;
         // Exactly one optimal action
         if(bids.size()==1)
             return bids[0];
@@ -232,15 +239,15 @@ void UserAgentMC::updateAuctionNum() {
     if(currentEvent!=NULL) {
         episodeLog.push_back(currentEvent);
 
-        cout << "*****************" <<endl;
-        AppBWReq* ask = currentEvent->getAsk();
-        if(ask==NULL)
-            cout << "NULL ask" << endl;
-        else
-            cout << "Logged " << ask->getActivityType() << " (" <<ask->getDlBandwidth()
-            << ", " << ask->getUlBandwidth() << ") - "
-            << currentEvent->getBid() << ", " <<currentEvent->getCp() << ", " << currentEvent->getUtility()<< endl;
-        cout << "*****************" << endl;
+//        cout << "*****************" <<endl;
+//        AppBWReq* ask = currentEvent->getAsk();
+//        if(ask==NULL)
+//            cout << "NULL ask" << endl;
+//        else
+//            cout << "Logged " << ask->getActivityType() << " (" <<ask->getDlBandwidth()
+//            << ", " << ask->getUlBandwidth() << ") - "
+//            << currentEvent->getBid() << ", " <<currentEvent->getCp() << ", " << currentEvent->getUtility()<< endl;
+//        cout << "*****************" << endl;
 
     }
     currentAuction++;
@@ -255,7 +262,7 @@ void UserAgentMC::updateAuctionNum() {
 
 void UserAgentMC::qTableUpdate() {
     int numOfEvents = episodeLog.size();
-    cout << "End of day update for "<<numOfEvents << " events"<<endl;
+//    cout << "End of day update for "<<numOfEvents << " events"<<endl;
     int i;
     double rt = 0;
     for (i = numOfEvents-1; i>=0; i--) {
@@ -322,5 +329,5 @@ void UserAgentMC::qTableUpdate() {
 
     // Empty the episode log
     episodeLog.clear();
-    cout << "MC events erased " << episodeLog.size() << endl;
+//    cout << "MC events erased " << episodeLog.size() << endl;
 }

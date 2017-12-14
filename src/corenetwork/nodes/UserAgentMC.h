@@ -34,9 +34,9 @@ private:
     map<State*, int, stateComp> statesVisited;
 
     MCevent* currentEvent;
-    double rewardsDiscountRate = 0.5;
-    double learningRate = 0.01;
-    double epsilonInverse = 4;
+    double rewardsDiscountRate = 0.8;
+    double learningRate = 0.1;
+    double epsilonInverse;
     cRNG* epsilonRng = NULL;
 
 public:

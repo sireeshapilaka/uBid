@@ -66,7 +66,7 @@ double calcPhiApp(string activityType, double bandwidth){
     }
 
     double random = (double)rand() / RAND_MAX;
-    return (app_bw/max_app_bw)+(0.01*random) ;
+    return ((double)app_bw/(double)max_app_bw) + (0.01*random) ;
 }
 
 } /* namespace uaUtils */

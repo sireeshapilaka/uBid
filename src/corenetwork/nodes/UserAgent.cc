@@ -46,8 +46,8 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
         this->containingUe->utilityPerAuction.record(utility);
         if (utility >= utilityThreshold) {
             double trueValuation = utility*utilityScalingFactor;
-            int bidAmount = min(trueValuation, budget + remainingBudgetFromLastAuction);
-            cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
+            int bidAmount = min(ceil(trueValuation), budget + remainingBudgetFromLastAuction);
+//            cout << "Utility for regular user is: " << utility << " and bid amount is "<< bidAmount <<  endl;
             this->containingUe->numRound2Sessions++;
             if(bidAmount!=0) {
                 this->containingUe->bidPerAuction.record(bidAmount);
@@ -192,7 +192,7 @@ double UserAgent::getUtility(AppBWRes* rpi) {
     else
         ulphisum = 0;
 
-    double timeInMin = ((double)dlduration+ulduration)/60;
+    double timeInMin = ((double)dlduration+ulduration);
     double a = 1-(this->alpha);
     double tTerm = (pow(timeInMin,a))/a;
 

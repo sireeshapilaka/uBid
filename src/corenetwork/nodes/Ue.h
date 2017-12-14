@@ -54,7 +54,7 @@ public:
     int numDataSessions = 0;
     cOutVector utilityPerAuction; // for the rounds that actually returns with a bundle
     cOutVector bidPerAuction; // for the rounds we actually get around to bidding in
-    cOutVector breakStatusPerAuction; // For each scheduled rpi need, this is 1: if round1 returned no feasible RPIs, 2: if utility did not exceed threshold, 3: if bid was lost, 4: if bid was won
+    cOutVector breakStatusPerAuction; // For each scheduled rpi need, this is 1: if round1 returned no feasible RPIs, 2: if utility did not exceed threshold, 3: if bid was lost or there wasnt enough money to place a bid, 4: if bid was won
     cOutVector rpiDesiredAt;  // The value here doesnt matter; it only matters that we get the timestamp at this point
     cOutVector paymentPerRound2Won;
     cOutVector bRemProgressionPerRound2AllDays;

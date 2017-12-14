@@ -46,7 +46,7 @@ public:
     void finish();
 private:
     ResourceManager resourceManager;
-    int totalUplinkCapacity = 2500, totalDownlinkCapacity = 2500;
+    int totalUplinkCapacity = 2000, totalDownlinkCapacity = 2000;
     list<AppBWRes*> bidsForNextAuction;
     GRBEnv* env;
     simtime_t timeOfNextAuction;

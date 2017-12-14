@@ -60,8 +60,9 @@ void Ue::initialize() {
     int userId = getIndex();
     this->appTrafficFileName = par("appTrafficConfigFile").stringValue();
     string filePath = this->appTrafficFileName + to_string(userId)+ "/";
+    //string filePath = "inputForMC/MC/0/";
     myType = par("nodeType").stringValue();
-    cout << "File for user "<< userId<< " is " << filePath << endl;
+//    cout << "File for user "<< userId<< " is " << filePath << endl;
 
     // Dealing with only RealtimeVideo
     string fileName = filePath+"RealtimeVideo.config";
@@ -83,14 +84,14 @@ void Ue::initialize() {
       timepart = stof(line.substr(0, pos));
       int oldPos = pos;
       pos = line.find(",", pos+1);
-      uplink = stoi(line.substr(oldPos + 1, pos));
+      ulDuration = stoi(line.substr(oldPos + 1, pos));
       oldPos = pos;
       pos = line.find(",", pos+1);
-      ulDuration = stoi(line.substr(oldPos+1, pos));
+      uplink = stoi(line.substr(oldPos+1, pos));
       oldPos = pos;
       pos = line.find(",", pos+1);
-      downlink = stoi(line.substr(oldPos+1, pos));
-      dlDuration = stoi(line.substr(pos+1, line.size()-1));
+      dlDuration = stoi(line.substr(oldPos+1, pos));
+      downlink = stoi(line.substr(pos+1, line.size()-1));
       timepart = (timepart%dayLen);
 
       rpisPerDay.push_back(new AppBWReq(0, 0, activityType, ulDuration, dlDuration, uplink, downlink));
@@ -200,6 +201,8 @@ void Ue::startNextActivity() {
 }
 
 void Ue::processUAResponse(cMessage* message) {
+    // Just in case an activity was scheduled at this point (it never should be) cancel it -- workkaround
+    cancelEvent(startActivity);
     AppAccessResponse* appAccessResponse = check_and_cast<AppAccessResponse*>(message);
     if (appAccessResponse->isStatus()) { //Indicates Success
         numDataSessions++;
@@ -240,5 +243,6 @@ void Ue::handleFailure(AppAccessResponse* appAccessResponse) {
 }
 
 void Ue::sendRPIResponse(BidResponse* bidResponse) {
+    Enter_Method_Silent();
     ua->handleBidResponse(bidResponse);
 }
