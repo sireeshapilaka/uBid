@@ -28,7 +28,7 @@ void NetworkAgent::initialize() {
     env = new GRBEnv();
     env->set(GRB_IntParam_OutputFlag, 0);
     // Schedule self-timer for clearing auction
-    scheduleAt(4, new cMessage("Auction"));
+    scheduleAt(3, new cMessage("Auction"));
 }
 
 void NetworkAgent::finish() {
@@ -179,7 +179,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
-        scheduleAt(curTime + 2, msg);
+        scheduleAt(curTime + 1, msg);
         return;
     }
 
@@ -278,7 +278,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     delete [] pricesToCharge;
 
     // Schedule next auction event
-    timeOfNextAuction = (simtime_t)currentTime + 2;
+    timeOfNextAuction = (simtime_t)currentTime + 1;
     scheduleAt(timeOfNextAuction, new cMessage("Auction"));
 }
 
