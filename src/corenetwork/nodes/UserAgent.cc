@@ -53,8 +53,10 @@ void UserAgent::handleRPIResponse(list<AppBWRes*> rpis) {
                 this->containingUe->bidPerAuction.record(bidAmount);
                 submitBid(rpis.front(), bidAmount);
             } else {
-                // TODO: Check the record status
-                this->containingUe->breakStatusPerAuction.record(2);
+                if(budget+remainingBudgetFromLastAuction==0)
+                    this->containingUe->breakStatusPerAuction.record(5);
+                else
+                    this->containingUe->breakStatusPerAuction.record(2);
                 delete rpis.front();
                 handleBidRejection();
             }

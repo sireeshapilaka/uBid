@@ -20,6 +20,7 @@ UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numO
     }
 
     brem = ((UeMC* )(this->containingUe))->getDailybudget();
+    cout << brem;
     currentAuction = 0;
 }
 
@@ -34,14 +35,14 @@ void UserAgentMC::getReservedAccess() {
             throw cRuntimeError("Network Agent Module not found!");
         }
     }
-    // If no budget left, don't start anything
-    if(brem==0){
-        currentEvent = NULL;
-        handleBidRejection();
-        updateAuctionNum();
-        this->containingUe->breakStatusPerAuction.record(3); // equivalent to bid loss
-        return;
-    }
+//    // If no budget left, don't start anything
+//    if(brem==0){
+//        currentEvent = NULL;
+//        handleBidRejection();
+//        updateAuctionNum();
+//        this->containingUe->breakStatusPerAuction.record(5);
+//        return;
+//    }
 
 
     // Get everything from Rpis list as per the num of auction
@@ -75,6 +76,13 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         }
 //        cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
+        if(brem==0){
+            currentEvent = NULL;
+            handleBidRejection();
+            updateAuctionNum();
+            this->containingUe->breakStatusPerAuction.record(5);
+            return;
+        }
         double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
         if(currentEvent == NULL) {
             throw cRuntimeError("currentevent is null in handleRPIResponse");
