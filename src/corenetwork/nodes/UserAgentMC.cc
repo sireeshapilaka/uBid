@@ -133,6 +133,7 @@ void UserAgentMC::handleBidResponse(BidResponse* bidResult) {
         this->containingUe->processUAResponse(response);
     } else {
 //        cout << "MC user >> bid win - lost" << endl;
+        this->containingUe->paymentPerRound2Won.record(-1.0*bidResult->getPayment()); // Would-be critical payment used for oracle purposes only
         this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
     }
