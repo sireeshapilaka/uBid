@@ -114,6 +114,8 @@ void UserAgent::handleBidResponse(BidResponse* bidResult) {
         }
         this->containingUe->processUAResponse(response);
     } else {
+        double criticalPaymentWouldBe = bidResult->getPayment();
+        this->containingUe->paymentPerRound2Won.record(-1.0*criticalPaymentWouldBe);
         this->containingUe->breakStatusPerAuction.record(3);
         handleBidRejection();
         remainingBudgetFromLastAuction += budget;
