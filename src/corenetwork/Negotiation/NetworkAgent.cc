@@ -223,14 +223,47 @@ void NetworkAgent::handleMessage(cMessage* msg) {
                 price = 0;
             }
             pricesToCharge[i] =  price;
-        } else {
-            pricesToCharge[i] = 0;
+        } else { // Compute would-be critical prices for oracle purposes only
+            double originalBid = bidOfInterest->getBidAmount();
+            bidOfInterest->setBidAmount(10000); // Ridiculously large bid amount to make this user win
+
+            // Solve the auction
+            bool* tempDecisions = new bool[numOfBids];
+            double tempRevenue = solveAuction(bidsForNextAuction, tempDecisions, currentTime);
+
+            list<AppBWRes*> rpis;
+            list<AppBWRes*>::iterator iter_temp = bidsForNextAuction.begin();
+            while (iter_temp != bidsForNextAuction.end()) {
+                AppBWRes* bid = *iter_temp;
+                if(bid!=bidOfInterest)
+                    rpis.push_back(bid);
+                iter_temp++;
+            }
+            bool* decisions_temp = new bool[numOfBids-1];
+            double paymentWithoutWinner = solveAuction(rpis, decisions_temp, currentTime);
+            double tempPrice = (paymentWithoutWinner)-(tempRevenue-bidOfInterest->getBidAmount());
+            double price = roundf(tempPrice * 100) / 100;
+            if(price<-.01)
+                throw cRuntimeError("Invalid price encountered");
+            if (price < 0 && price > -.01) {
+                price = 0;
+            }
+            pricesToCharge[i] = price;
+            bidOfInterest->setBidAmount(originalBid);
+
+            iter_temp = rpis.begin();
+            while(iter_temp != rpis.end()) {
+                rpis.erase(iter_temp++);
+            }
+            delete [] decisions_temp;
+            delete [] tempDecisions;
         }
 
         iter++;
         i++;
     }
 
+    // Reserve resources for winning users and inform them of the bid decisions
     iter = bidsForNextAuction.begin();
     i = 0;
     int numWinners = 0;
@@ -255,6 +288,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
             bidResponse->setPayment(pricesToCharge[i]);
         } else {
             // Find the corresponding UE and notify
+            bidResponse->setPayment(pricesToCharge[i]); // Would be critical-prices for oracle purposes only
             bidResponse->setBidResult(false);
         }
         int userId = bidOfInterest->getUser();
@@ -273,6 +307,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     if (totalNumBids > 0 && numWinners == 0) {
         throw cRuntimeError("No winners were chosen when bids were present!");
     }
+
     //Free arrays
     delete [] decisions;
     delete [] pricesToCharge;
