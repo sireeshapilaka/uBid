@@ -18,7 +18,7 @@ namespace uaUtils {
 static std::default_random_engine generator;
 static std::normal_distribution<double> alphaDistr (0.5,0.05);
 double genAlpha();
-double calcPhiApp(string activityType, double bandwidth);
+double calcPhiApp(string activityType, double bandwidth, double aConst, double bConst);
 
 } /* namespace uaUtils */
 

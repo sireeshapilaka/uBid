@@ -52,6 +52,7 @@ public:
     int numRound2Sessions = 0;
     int numRound1Sessions = 0;
     int numDataSessions = 0;
+    double aConst, bConst;
     cOutVector utilityPerAuction; // for the rounds that actually returns with a bundle
     cOutVector bidPerAuction; // for the rounds we actually get around to bidding in
     cOutVector breakStatusPerAuction;

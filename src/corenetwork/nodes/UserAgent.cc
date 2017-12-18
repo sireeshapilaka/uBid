@@ -171,11 +171,13 @@ double UserAgent::getUtility(AppBWRes* rpi) {
     if (dlduration==0 && ulduration==0) return 0;
     int i;
     string app = rpi->getActivityType();
-    double dl_phi_asked = calcPhiApp(app, askingDownlinkThroughput);
-    double ul_phi_asked = calcPhiApp(app, askingUplinkThroughput);
+    double aConst = this->containingUe->aConst;
+    double bConst = this->containingUe->bConst;
+    double dl_phi_asked = calcPhiApp(app, askingDownlinkThroughput, aConst, bConst);
+    double ul_phi_asked = calcPhiApp(app, askingUplinkThroughput, aConst, bConst);
 
     for(i=0; i<dlduration; i++) {
-        double phi_given = calcPhiApp(app, rpi->getDlBandwidth(i));
+        double phi_given = calcPhiApp(app, rpi->getDlBandwidth(i), aConst, bConst);
         double iTerm = phi_given/(1+dl_phi_asked-phi_given);
         dlphisum += iTerm;
     }
@@ -185,7 +187,7 @@ double UserAgent::getUtility(AppBWRes* rpi) {
         dlphisum = 0;
 
     for(i=0; i<ulduration; i++) {
-        double phi_given = calcPhiApp(app, rpi->getUlBandwidth(i));
+        double phi_given = calcPhiApp(app, rpi->getUlBandwidth(i), aConst, bConst);
         double iTerm = phi_given/(1+ul_phi_asked-phi_given);
         ulphisum += iTerm;
     }
@@ -197,7 +199,6 @@ double UserAgent::getUtility(AppBWRes* rpi) {
     double timeInMin = ((double)dlduration+ulduration);
     double a = 1-(this->alpha);
     double tTerm = (pow(timeInMin,a))/a;
-
     return tTerm*(ulphisum + dlphisum);
 
 }

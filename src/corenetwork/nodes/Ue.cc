@@ -56,6 +56,9 @@ void Ue::initialize() {
     if (totalBudget <= 0) {
         throw cRuntimeError("User has budget <= 0!");
     }
+    this->aConst = par("aConst").doubleValue();
+    this->bConst = par("bConst").doubleValue();
+
     // Populate rpis from the file
     int userId = getIndex();
     this->appTrafficFileName = par("appTrafficConfigFile").stringValue();

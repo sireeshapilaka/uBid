@@ -13,7 +13,7 @@ double genAlpha() {
     return alphaDistr(generator);
 }
 
-double calcPhiApp(string activityType, double bandwidth){
+double calcPhiApp(string activityType, double bandwidth, double aConst, double bConst){
     // TODO : Revisit the null bandwidth case
 
     int app_bw = 0;
@@ -65,8 +65,10 @@ double calcPhiApp(string activityType, double bandwidth){
             app_bw = 0;
     }
 
-    double random = (double)rand() / RAND_MAX;
-    return ((double)app_bw/(double)max_app_bw) + (0.01*random) ;
+    return ceil(bConst*(pow(aConst, app_bw)));
+
+    //double random = (double)rand() / RAND_MAX;
+    //return ((double)app_bw/(double)max_app_bw);// + (0.01*random) ;
 }
 
 } /* namespace uaUtils */

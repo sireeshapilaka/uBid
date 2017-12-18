@@ -76,6 +76,14 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         }
 //        cout << "Bidding for "<< ongoingActivity << " at " << simTime() << endl;
 
+        if(currentEvent == NULL) {
+            throw cRuntimeError("currentevent is null in handleRPIResponse");
+        }
+        double thisUtility = getUtility(rpiOfInterest);
+        currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
+                rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), thisUtility);
+        this->containingUe->utilityPerAuction.record(thisUtility);
+
         if(brem==0){
             currentEvent = NULL;
             handleBidRejection();
@@ -84,14 +92,7 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
             return;
         }
         double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
-        if(currentEvent == NULL) {
-            throw cRuntimeError("currentevent is null in handleRPIResponse");
-        }
-        double thisUtility = getUtility(rpiOfInterest);
-        currentEvent->setRes(new AppBWRes(rpiOfInterest->getDlDuration(), rpiOfInterest->getUlDuration(),
-                rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth()), thisUtility);
         currentEvent->updateBidValue(bidAmount);
-        this->containingUe->utilityPerAuction.record(thisUtility);
         this->containingUe->bidPerAuction.record(bidAmount);
         submitBid(rpis.front(), bidAmount);
         this->containingUe->numRound2Sessions++;
