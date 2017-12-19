@@ -210,6 +210,7 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
                     if(currentQ>maxQ) {
                         bids.clear();
                         bids.push_back(i);
+                        maxQ = currentQ;
                     } else if(currentQ==maxQ) {
                         bids.push_back(i);
                     }
@@ -218,17 +219,20 @@ double UserAgentMC::computeBid(double* dl, double* ul) {
         }
 
         // No known optimal action, so picking random action
-        if(bids.size()==0)
-            return intuniform(rng, 1, brem);
+        if(bids.size()==0 || maxQ==0) {
+            int myBid = intuniform(rng, 1, brem);
+            return myBid;
+        }
 
-//        cout << "MC user non-random bid" << endl;
         // Exactly one optimal action
-        if(bids.size()==1)
+        if(bids.size()==1) {
             return bids[0];
+        }
 
         // Picking one of the optimal actions at random
         int size = bids.size();
-        return bids[intuniform(rng, 0, size-1)];
+        int myBid = bids[intuniform(rng, 0, size-1)];
+        return myBid;
 
     }
 }
@@ -272,7 +276,7 @@ void UserAgentMC::updateAuctionNum() {
 
 void UserAgentMC::qTableUpdate() {
     int numOfEvents = episodeLog.size();
-//    cout << "End of day update for "<<numOfEvents << " events"<<endl;
+//    cout << "\n\nEnd of day update at "<< simTime() <<endl;
     int i;
     double rt = 0;
     for (i = numOfEvents-1; i>=0; i--) {
@@ -306,7 +310,7 @@ void UserAgentMC::qTableUpdate() {
 
         // Discounted reward
         rt = eve->getUtility() + (rewardsDiscountRate*rt);
-
+   
         // State visit update and use the same state for the sa pair as well
         State* prevState = new State(eve->getIndex(), eve->getBrem(), ulDelta, dlDelta, ulDuration, dlDuration);
         auto stateSearched = statesVisited.find(prevState);
