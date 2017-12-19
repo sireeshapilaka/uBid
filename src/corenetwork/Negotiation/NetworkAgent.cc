@@ -48,6 +48,7 @@ double NetworkAgent::solveAuction(list<AppBWRes*> rpis, bool* decisions, simtime
     list<AppBWRes*>::iterator iter;
     int longestDuration = 0;
     int i = 0;
+
     for (iter = rpis.begin(); iter != rpis.end(); iter++) {
         string s = "x_" + to_string(i);
         decisionVars[i].set(GRB_DoubleAttr_Obj, (*iter)->getBidAmount());
@@ -176,6 +177,17 @@ void NetworkAgent::handleMessage(cMessage* msg) {
         resourceManager.clearAllEntries();
     }
 
+    // Remove zero-bid entries from bidsForNextAuction and find out their CPs at the end
+    list<AppBWRes*> zeroBidRPIs;
+    list<AppBWRes*>::iterator iter = bidsForNextAuction.begin();
+    while(iter != bidsForNextAuction.end()) {
+        if ((*iter)->getBidAmount() < .01) { // essentially a zero bid, give room for double stuff
+            zeroBidRPIs.push_back(*iter);
+            bidsForNextAuction.erase(iter);
+        }
+        iter++;
+    }
+
     // Clear Auction with bids so far, convey results
     int numOfBids = bidsForNextAuction.size();
     if (numOfBids <= 0) {
@@ -189,7 +201,7 @@ void NetworkAgent::handleMessage(cMessage* msg) {
     double totalPayment = solveAuction(bidsForNextAuction, decisions, currentTime);
 
     // Compute the prices to charge
-    list<AppBWRes*>::iterator iter = bidsForNextAuction.begin();
+    iter = bidsForNextAuction.begin();
     int i = 0;
     double* pricesToCharge = new double[numOfBids];
     while(iter !=bidsForNextAuction.end()) {
@@ -261,6 +273,46 @@ void NetworkAgent::handleMessage(cMessage* msg) {
 
         iter++;
         i++;
+    }
+
+    // Compute critical prices for zero bids and notify UEs then and there.
+    iter = zeroBidRPIs.begin();
+    while(iter !=zeroBidRPIs.end()) {
+        AppBWRes* bidOfInterest = *iter;
+        bidOfInterest->setBidAmount(10000); // Ridiculously large bid amount to make this user win
+        bidsForNextAuction.push_back(bidOfInterest);
+        // Solve the auction
+        bool* tempDecisions = new bool[numOfBids + 1];
+        double tempRevenue = solveAuction(bidsForNextAuction, tempDecisions, currentTime);
+
+        bidsForNextAuction.remove(bidOfInterest);
+
+        bool* decisions_temp = new bool[numOfBids];
+        double paymentWithoutWinner = solveAuction(bidsForNextAuction, decisions_temp, currentTime);
+        double tempPrice = (paymentWithoutWinner)-(tempRevenue-bidOfInterest->getBidAmount());
+        double price = roundf(tempPrice * 100) / 100;
+        if(price<-.01)
+            throw cRuntimeError("Invalid price encountered");
+        if (price < 0 && price > -.01) {
+            price = 0;
+        }
+        BidResponse* bidResponse = new BidResponse();
+        bidResponse->setPayment(price); // Would be critical-prices for oracle purposes only
+        bidResponse->setBidResult(false);
+
+        cout << "zero bid stuff! suggested bid is " << price << endl;
+
+        int userId = bidOfInterest->getUser();
+        string userType = bidOfInterest->getUserType();
+
+        Ue* ueOfInterest = dynamic_cast<Ue*>(getParentModule()->getSubmodule(userType.c_str(), userId));
+        if (ueOfInterest == NULL) {
+            throw cRuntimeError("UE could not be found!");
+        }
+        ueOfInterest->sendRPIResponse(bidResponse);
+        delete [] decisions_temp;
+        delete [] tempDecisions;
+        iter++;
     }
 
     // Reserve resources for winning users and inform them of the bid decisions

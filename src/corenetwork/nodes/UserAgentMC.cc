@@ -20,7 +20,6 @@ UserAgentMC::UserAgentMC(Ue* containingUe, vector<AppBWReq*> rpisOfDay, int numO
     }
 
     brem = ((UeMC* )(this->containingUe))->getDailybudget();
-    cout << brem;
     currentAuction = 0;
 }
 
@@ -85,18 +84,19 @@ void UserAgentMC::handleRPIResponse(list<AppBWRes*> rpis) {
         this->containingUe->utilityPerAuction.record(thisUtility);
 
         if(brem==0){
-            currentEvent = NULL;
-            handleBidRejection();
-            updateAuctionNum();
+            // currentEvent = NULL;
+            // handleBidRejection();
+            // updateAuctionNum();
             this->containingUe->breakStatusPerAuction.record(5);
-            return;
+            submitBid(rpis.front(), 0); // do not record the bid amount of 0 as this is just for oracle purposes
+            // return;
+        } else {
+            double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
+            currentEvent->updateBidValue(bidAmount);
+            this->containingUe->bidPerAuction.record(bidAmount);
+            submitBid(rpis.front(), bidAmount);
+            this->containingUe->numRound2Sessions++;
         }
-        double bidAmount = computeBid(rpiOfInterest->getDlBandwidth(), rpiOfInterest->getUlBandwidth());
-        currentEvent->updateBidValue(bidAmount);
-        this->containingUe->bidPerAuction.record(bidAmount);
-        submitBid(rpis.front(), bidAmount);
-        this->containingUe->numRound2Sessions++;
-
     } else if (rpis.size() == 0 || (rpis.size() == 1 && rpis.front() == NULL)) {
         // Let the UE know this is infeasible
         this->containingUe->breakStatusPerAuction.record(1);
